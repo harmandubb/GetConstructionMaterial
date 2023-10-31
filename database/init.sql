@@ -22,15 +22,15 @@ VALUES
 ('Laptop', 'Electronics', 999.99),
 ('Coffee Maker', 'Appliances', 59.99);
 
---Testing commands for the database 
+-- Testing commands for the database 
 -- 1. Connect to the database
--- psql -h hostname -U username -d databasename
+psql -h hostname -U username -d databasename
 
 -- 2. List Tables 
--- \dt
+\dt
 
 -- 3. Describe Table Structure
--- \d tablename 
+\d products 
 
 -- 4. Check for Sample Data 
--- SELECT * FROM tablename;
+SELECT * FROM tablename;

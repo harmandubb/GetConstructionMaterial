@@ -1,0 +1,3 @@
+psql -h localhost -p 5432 -U postgres -d mynewdatabase -f init.sql
+
+docker run --env-file .env docstruction

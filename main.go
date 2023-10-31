@@ -6,5 +6,6 @@ import (
 
 func main() {
 	// api.SendEmail()
-	api.AddProduct()
+	api.CheckDataBase()
+	// api.AddProduct()
 }
