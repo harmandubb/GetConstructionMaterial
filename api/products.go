@@ -15,7 +15,7 @@ import (
 type Product struct {
 	Name      string
 	Category  string
-	DataSheet byte   // FUTURE: URL to the data sheet
+	DataSheet []byte // FUTURE: URL to the data sheet
 	Pictures  []byte // FUTURE: URLs to product images
 	Price     float64
 }
@@ -29,12 +29,6 @@ type Date struct {
 func connectToDataBase() *sql.DB {
 
 	err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
-
-	// host := os.Getenv("HOST")
-	// port := os.Getenv("PORT")
-	// user := os.Getenv("USER")
-	// password := os.Getenv("PASSWORD")
-	// dbname := os.Getenv("DB_NAME")
 
 	db_url := os.Getenv("DB_URL")
 
@@ -90,7 +84,7 @@ func CheckDataBase() {
 
 }
 
-func AddProduct() {
+func AddProductBasic(name string, category string, price float64) {
 	db := connectToDataBase()
 
 	tx, err := db.Begin()
@@ -100,36 +94,23 @@ func AddProduct() {
 
 	defer tx.Rollback()
 
-	// stmt, err := tx.Prepare("INSERT INTO products (name) VALUES($1)")
-	rows, err := db.Query(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`)
+	stmt, err := tx.Prepare("INSERT INTO products (name, category, price) VALUES($1, $2, $3)")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(rows)
-
-	defer rows.Close()
-	// defer stmt.Close()
-
-	for rows.Next() {
-		var tableName string
-		if err := rows.Scan(&tableName); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(tableName)
-	}
-
-	if err := rows.Err(); err != nil {
+	if _, err := stmt.Exec(name, category, price); err != nil {
 		log.Fatal(err)
 	}
-	// if _, err := stmt.Exec("Fire Stop Collar", "Fire Stopping", 10.96); err != nil {
-	// 	log.Fatal(err)
-	// }
 
-	// if err := tx.Commit(); err != nil {
-	// 	log.Fatal(err)
-	// }
+	if err := tx.Commit(); err != nil {
+		log.Fatal(err)
+	}
 
-	fmt.Println("Test Transmission is sucessful")
+	fmt.Println("Product Added Sucessfully")
 
 }
+
+func AddProductDataSheet(name string, datasheet []byte)
+
+func AddProductPicture(name string, picture []byte)
