@@ -9,10 +9,13 @@
 -- Creating a table to store product information
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     category VARCHAR(100),
     data_sheet BYTEA,
-    pictures BYTEA[],
+    picture BYTEA[],
+    picture_w INT,
+    picture_h INT,
+    data_sheet BYTEA[],
     price NUMERIC(10, 2)
 );
 
