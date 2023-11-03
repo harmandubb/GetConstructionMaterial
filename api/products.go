@@ -20,9 +20,8 @@ type Product struct {
 	Picture       []byte // FUTURE: URLs to product images
 	PictureHeight int
 	PictureWidth  int
-	Data_Sheet 	   []byte
+	Data_Sheet    []byte
 	Price         float64
-
 }
 
 type Date struct {
@@ -161,7 +160,7 @@ func imageEncode(img image.Image) (int, int, []byte) {
 	return width, height, result
 }
 
-func dataBaseTransmit(query string, args ...any) (bool, error){
+func dataBaseTransmit(query string, args ...any) (bool, error) {
 	db := connectToDataBase()
 
 	tx, err := db.Begin()
@@ -169,7 +168,7 @@ func dataBaseTransmit(query string, args ...any) (bool, error){
 		return false, err
 	}
 
-	defer tx.Rollback()	
+	defer tx.Rollback()
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
@@ -189,14 +188,12 @@ func dataBaseTransmit(query string, args ...any) (bool, error){
 	return true, nil
 }
 
-func AddProductDataSheet(name string, pdfPath string){
-	file, err := os.ReadFile(pathName)
+func AddProductDataSheet(name string, pdfPath string) {
+	file, err := os.ReadFile(pdfPath)
 
-	query := "UPDATE products
-				SET data_sheet = $1
-				WHERE name = $2"
+	query := "UPDATE products SET data_sheet = $1 WHERE name = $2"
 
-	_, err := dataBaseTransmit(query, file, name)
+	_, err = dataBaseTransmit(query, file, name)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -211,17 +208,11 @@ func AddProductPicture(name string, imgPath string) {
 
 	w, h, imgBytes := imageEncode(img)
 
-	query := "INSERT INTO products (name, picture, picture_w, picture_h) 
-				VALUES($1, $2, $3, $4)
-				ON CONFLICT (name) 
-				DO UPDATE SET 
-					picture = excluded.picture,
-					picture_w = excluded.picture_w,
-					picture_h = excluded.picture_h"
+	query := "INSERT INTO products (name, picture, picture_w, picture_h) VALUES($1, $2, $3, $4) ON CONFLICT (name) DO UPDATE SET picture = excluded.picture, picture_w = excluded.picture_w, picture_h = excluded.picture_h"
 
-	_, err := dataBaseTransmit(query,name,imgBytes,w,h)
+	_, err = dataBaseTransmit(query, name, imgBytes, w, h)
 
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 

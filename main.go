@@ -7,5 +7,7 @@ import (
 func main() {
 	// api.SendEmail()
 	// api.CheckDataBase()
-	api.AddProduct("Meta Caulk Collars", "Fire Stopping", 10.01)
+	api.AddProductBasic("Meta Caulk Collars", "Fire Stopping", 10.01)
+	api.AddProductPicture("Meta Caulk Collars", "./images/img1.jpg")
+
 }

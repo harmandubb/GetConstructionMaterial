@@ -11,7 +11,6 @@ CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     category VARCHAR(100),
-    data_sheet BYTEA,
     picture BYTEA[],
     picture_w INT,
     picture_h INT,
