@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"image"
@@ -8,18 +9,18 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/jackc/pgx" // the _ allows the line to stay as is and doesn't disappear because we are telling the system that we want to intialize the package but not nessesarily use function
 	"github.com/joho/godotenv"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
 type Product struct {
+	ID            int
 	Name          string
 	Category      string
-	DataSheet     []byte // FUTURE: URL to the data sheet
 	Picture       []byte // FUTURE: URLs to product images
-	PictureHeight int
-	PictureWidth  int
+	PictureWidth  *int
+	PictureHeight *int
 	Data_Sheet    []byte
 	Price         float64
 }
@@ -30,11 +31,12 @@ type Date struct {
 	Day   int
 }
 
-func connectToDataBase() *sql.DB {
-
+func connectToDataBase(database string) *sql.DB {
 	err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
 
-	db_url := os.Getenv("DB_URL")
+	url := os.Getenv("DB_URL")
+
+	db_url := url + database
 
 	db, err := sql.Open("postgres", db_url)
 	if err != nil {
@@ -45,13 +47,12 @@ func connectToDataBase() *sql.DB {
 	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
-	fmt.Println("Connected!")
 
 	return db
 }
 
 func CheckDataBase() {
-	db := connectToDataBase()
+	db := connectToDataBase("mynewdatabase")
 
 	defer db.Close()
 
@@ -77,19 +78,16 @@ func CheckDataBase() {
 		if err := rows.Scan(&tableName); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(tableName)
 	}
 
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Test Transmission is sucessful")
-
 }
 
 func AddProductBasic(name string, category string, price float64) {
-	db := connectToDataBase()
+	db := connectToDataBase("mynewdatabase")
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -113,8 +111,6 @@ func AddProductBasic(name string, category string, price float64) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Product Added Sucessfully")
-
 }
 
 func readImage(filePath string) (image.Image, error) {
@@ -123,6 +119,15 @@ func readImage(filePath string) (image.Image, error) {
 		return nil, err
 	}
 	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	//Decode image
+	config, fileType, _ := image.DecodeConfig(reader)
+
+	fmt.Println(config)
+
+	fmt.Println(fileType)
 
 	img, _, err := image.Decode(file)
 	if err != nil {
@@ -160,8 +165,19 @@ func imageEncode(img image.Image) (int, int, []byte) {
 	return width, height, result
 }
 
+func dataBaseRead(query string) (*sql.Rows, error) {
+	db := connectToDataBase("mynewdatabase")
+
+	rows, err := db.Query(query) //returns a pointer to where rows are
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
+}
+
 func dataBaseTransmit(query string, args ...any) (bool, error) {
-	db := connectToDataBase()
+	db := connectToDataBase("mynewdatabase")
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -177,7 +193,8 @@ func dataBaseTransmit(query string, args ...any) (bool, error) {
 
 	defer stmt.Close() // Close the statement when we're done with it
 
-	if _, err := stmt.Exec(args); err != nil {
+	_, err = stmt.Exec(args...)
+	if err != nil {
 		return false, err
 	}
 
@@ -188,15 +205,25 @@ func dataBaseTransmit(query string, args ...any) (bool, error) {
 	return true, nil
 }
 
-func AddProductDataSheet(name string, pdfPath string) {
+func AddProductDataSheet(name string, pdfPath string) (bool, error) {
 	file, err := os.ReadFile(pdfPath)
 
-	query := "UPDATE products SET data_sheet = $1 WHERE name = $2"
+	byteaFile := pq.Array(file)
 
-	_, err = dataBaseTransmit(query, file, name)
+	os.WriteFile("../pdf/test/test.pdf", file, 0644)
+
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
+
+	query := "UPDATE products SET data_sheet = $2 WHERE name = $1"
+
+	_, err = dataBaseTransmit(query, name, byteaFile)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 
 }
 
@@ -215,7 +242,4 @@ func AddProductPicture(name string, imgPath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println("Product Image Added Successfully")
-
 }
