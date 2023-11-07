@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -87,22 +88,16 @@ func AddProductBasic(name string, category string, price float64) {
 		log.Fatal(err)
 	}
 
-	defer tx.Rollback()
+	defer tx.Rollback(context.Background())
 
-	stmt, err := tx.Prepare("INSERT INTO products (name, category, price) VALUES($1, $2, $3)")
+	sqlString := "INSERT INTO products (name, category, price) VALUES($1, $2, $3)"
+
+	cmdTag, err := tx.Exec(context.Background(), sqlString, name, category, price)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer stmt.Close() // Close the statement when we're done with it
-
-	if _, err := stmt.Exec(name, category, price); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println(cmdTag)
 
 }
 
