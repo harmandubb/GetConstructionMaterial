@@ -1,3 +1,10 @@
 psql -h localhost -p 5432 -U postgres -d mynewdatabase -f init.sql
 
 docker run --env-file .env docstruction
+
+psql -U userName
+    CREATE DATABASE database_name WITH ENCODING 'UTF8'
+
+\c database_name // to connect to a database
+
+SELECT * FROM table_name 

@@ -11,10 +11,10 @@ CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     category VARCHAR(100),
-    picture BYTEA[],
+    picture OID,
     picture_w INT,
     picture_h INT,
-    data_sheet BYTEA[],
+    data_sheet OID,
     price NUMERIC(10, 2)
 );
 

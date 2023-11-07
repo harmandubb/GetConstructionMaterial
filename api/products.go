@@ -1,17 +1,14 @@
 package api
 
 import (
-	"bufio"
-	"database/sql"
-	"fmt"
-	"image"
+	"context"
 	"log"
 	"os"
 	"time"
 
+	_ "github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/lib/pq"
-	_ "github.com/lib/pq"
 )
 
 type Product struct {
@@ -31,50 +28,45 @@ type Date struct {
 	Day   int
 }
 
-func connectToDataBase(database string) *sql.DB {
+func connectToDataBase(database string) *pgxpool.Pool {
 	err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	url := os.Getenv("DB_URL")
 
 	db_url := url + database
 
-	db, err := sql.Open("postgres", db_url)
+	dbpool, err := pgxpool.New(context.Background(), db_url)
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
 
-	pingErr := db.Ping() //verifies a connection to the database is still alive, establishing a connection if necessary.
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
-
-	return db
+	return dbpool
 }
 
-func CheckDataBase() {
-	db := connectToDataBase("mynewdatabase")
+func CheckDataBase(database string) string {
+	p := connectToDataBase(database)
 
-	defer db.Close()
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	tx, err := db.Begin()
+	defer tx.Rollback(context.Background())
+
+	rows, err := p.Query(context.Background(), `SELECT current_database();`)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	defer tx.Rollback()
-
-	rows, err := db.Query(`SELECT current_database();`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(rows)
 
 	defer rows.Close()
 	// defer stmt.Close()
 
+	var tableName string
+
 	for rows.Next() {
-		var tableName string
 		if err := rows.Scan(&tableName); err != nil {
 			log.Fatal(err)
 		}
@@ -84,12 +76,13 @@ func CheckDataBase() {
 		log.Fatal(err)
 	}
 
+	return tableName
 }
 
 func AddProductBasic(name string, category string, price float64) {
-	db := connectToDataBase("mynewdatabase")
+	p := connectToDataBase("mynewdatabase")
 
-	tx, err := db.Begin()
+	tx, err := p.Begin(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -113,133 +106,54 @@ func AddProductBasic(name string, category string, price float64) {
 
 }
 
-func readImage(filePath string) (image.Image, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+// func dataBaseRead(query string) (*sql.Rows, error) {
+// 	db := connectToDataBase("mynewdatabase")
 
-	reader := bufio.NewReader(file)
+// 	rows, err := db.Query(query) //returns a pointer to where rows are
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	//Decode image
-	config, fileType, _ := image.DecodeConfig(reader)
+// 	return rows, nil
+// }
 
-	fmt.Println(config)
+// func dataBaseTransmit(query string, args ...any) (bool, error) {
+// 	db := connectToDataBase("mynewdatabase")
 
-	fmt.Println(fileType)
+// 	tx, err := db.Begin()
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	img, _, err := image.Decode(file)
-	if err != nil {
-		return nil, err
-	}
+// 	defer tx.Rollback()
 
-	return img, nil
-}
+// 	stmt, err := tx.Prepare(query)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-func imageEncode(img image.Image) (int, int, []byte) {
-	bounds := img.Bounds()
-	width, height := bounds.Max.X, bounds.Max.Y
+// 	defer stmt.Close() // Close the statement when we're done with it
 
-	// Create a buffer to store the bytes
-	var result []byte
+// 	_, err = stmt.Exec(args...)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			// Get the color of the current pixel
-			color := img.At(x, y)
+// 	if err := tx.Commit(); err != nil {
+// 		return false, err
+// 	}
 
-			// Convert the color to RGBA
-			r, g, b, a := color.RGBA()
+// 	return true, nil
+// }
 
-			// Convert from 16-bit color to 8-bit color
-			r8 := uint8(r >> 8)
-			g8 := uint8(g >> 8)
-			b8 := uint8(b >> 8)
-			a8 := uint8(a >> 8)
+// func AddProductDataSheet(name string, pdfPath string, database string) error {
+// 	db := connectToDataBase(database)
+// 	Tx, err := db.Begin()
+// 	if err != nil {
+// 		return err
+// 	}
 
-			// Append the RGB(A) values to the result slice
-			result = append(result, r8, g8, b8, a8)
-		}
-	}
-	return width, height, result
-}
+// 	lo := pgx.LargeObjects{tx: Tx}
 
-func dataBaseRead(query string) (*sql.Rows, error) {
-	db := connectToDataBase("mynewdatabase")
-
-	rows, err := db.Query(query) //returns a pointer to where rows are
-	if err != nil {
-		return nil, err
-	}
-
-	return rows, nil
-}
-
-func dataBaseTransmit(query string, args ...any) (bool, error) {
-	db := connectToDataBase("mynewdatabase")
-
-	tx, err := db.Begin()
-	if err != nil {
-		return false, err
-	}
-
-	defer tx.Rollback()
-
-	stmt, err := tx.Prepare(query)
-	if err != nil {
-		return false, err
-	}
-
-	defer stmt.Close() // Close the statement when we're done with it
-
-	_, err = stmt.Exec(args...)
-	if err != nil {
-		return false, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-func AddProductDataSheet(name string, pdfPath string) (bool, error) {
-	file, err := os.ReadFile(pdfPath)
-
-	byteaFile := pq.Array(file)
-
-	os.WriteFile("../pdf/test/test.pdf", file, 0644)
-
-	if err != nil {
-		return false, err
-	}
-
-	query := "UPDATE products SET data_sheet = $2 WHERE name = $1"
-
-	_, err = dataBaseTransmit(query, name, byteaFile)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-
-}
-
-func AddProductPicture(name string, imgPath string) {
-	img, err := readImage(imgPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	w, h, imgBytes := imageEncode(img)
-
-	query := "INSERT INTO products (name, picture, picture_w, picture_h) VALUES($1, $2, $3, $4) ON CONFLICT (name) DO UPDATE SET picture = excluded.picture, picture_w = excluded.picture_w, picture_h = excluded.picture_h"
-
-	_, err = dataBaseTransmit(query, name, imgBytes, w, h)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+// 	return nil
+// }
