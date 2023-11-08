@@ -115,43 +115,78 @@ func dataBaseRead(sqlString string) (pgx.Rows, error) {
 	return rows, nil
 }
 
-// func dataBaseTransmit(query string, args ...any) (bool, error) {
-// 	db := connectToDataBase("mynewdatabase")
+func dataBaseTransmit(sqlString string, database string, args ...any) error {
+	p := connectToDataBase(database)
 
-// 	tx, err := db.Begin()
-// 	if err != nil {
-// 		return false, err
-// 	}
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		return err
+	}
 
-// 	defer tx.Rollback()
+	defer tx.Rollback(context.Background())
 
-// 	stmt, err := tx.Prepare(query)
-// 	if err != nil {
-// 		return false, err
-// 	}
+	_, err = tx.Exec(context.Background(), sqlString, args...)
+	if err != nil {
+		return err
+	}
 
-// 	defer stmt.Close() // Close the statement when we're done with it
+	if err := tx.Commit(context.Background()); err != nil {
+		return err
+	}
 
-// 	_, err = stmt.Exec(args...)
-// 	if err != nil {
-// 		return false, err
-// 	}
+	return nil
+}
 
-// 	if err := tx.Commit(); err != nil {
-// 		return false, err
-// 	}
+func AddProductDataSheet(name string, pdfPath string, database string) error {
+	p := connectToDataBase(database)
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		return err
+	}
 
-// 	return true, nil
-// }
+	//can start to initiative the large objects process
+	los := tx.LargeObjects()
 
-// func AddProductDataSheet(name string, pdfPath string, database string) error {
-// 	db := connectToDataBase(database)
-// 	Tx, err := db.Begin()
-// 	if err != nil {
-// 		return err
-// 	}
+	oidVal, err := los.Create(context.Background(), 0)
+	if err != nil {
+		return err
+	}
 
-// 	lo := pgx.LargeObjects{tx: Tx}
+	fmt.Println(oidVal)
 
-// 	return nil
-// }
+	// should I upload the oid number to the table section
+	lo, err := los.Open(context.Background(), oidVal, pgx.LargeObjectModeWrite)
+	if err != nil {
+		return err
+	}
+
+	defer lo.Close()
+
+	// Can write the pdf to the large object since I have the  connection established.
+	file, err := os.Open(pdfPath)
+	if err != nil {
+		return err
+	}
+
+	var fileBytes []byte
+
+	_, err = file.Read(fileBytes)
+	if err != nil {
+		return err
+	}
+
+	_, err = lo.Write(fileBytes)
+	if err != nil {
+		return err
+	}
+
+	//store the oid value in the database table
+	sqlString := "UPDATE products SET data_sheet=$1 WHERE name='$2'"
+
+	_, err = tx.Exec(context.Background(), sqlString, oidVal, name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

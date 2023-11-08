@@ -58,8 +58,8 @@ func TestAddProductBasic(t *testing.T) {
 	AddProductBasic(name, category, price)
 
 	//Read the database to see if the action occured
-	query := "SELECT * FROM products"
-	rows, err := dataBaseRead(query)
+	sqlString := "SELECT * FROM products"
+	rows, err := dataBaseRead(sqlString)
 	if err != nil {
 		log.Fatalln(err)
 	}
