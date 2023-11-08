@@ -7,7 +7,8 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -99,18 +100,20 @@ func AddProductBasic(name string, category string, price float64) {
 
 	fmt.Println(cmdTag)
 
+	tx.Commit(context.Background())
+
 }
 
-// func dataBaseRead(query string) (*sql.Rows, error) {
-// 	db := connectToDataBase("mynewdatabase")
+func dataBaseRead(sqlString string) (pgx.Rows, error) {
+	p := connectToDataBase("mynewdatabase")
 
-// 	rows, err := db.Query(query) //returns a pointer to where rows are
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	rows, err := p.Query(context.Background(), sqlString) //returns a pointer to where rows are
+	if err != nil {
+		return rows, err
+	}
 
-// 	return rows, nil
-// }
+	return rows, nil
+}
 
 // func dataBaseTransmit(query string, args ...any) (bool, error) {
 // 	db := connectToDataBase("mynewdatabase")

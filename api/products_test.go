@@ -19,10 +19,12 @@ func resetTestDataBase() error {
 
 	defer tx.Rollback(context.Background())
 
-	cmdTag, err := tx.Exec(context.Background(),sqlString)\
+	_, err = tx.Exec(context.Background(), sqlString)
 	if err != nil {
 		return err
 	}
+
+	tx.Commit(context.Background())
 
 	return nil
 
