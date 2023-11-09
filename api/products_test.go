@@ -91,3 +91,15 @@ func TestAddProductBasic(t *testing.T) {
 		t.Errorf("Database price = %f; want %f", got.Price, price)
 	}
 }
+
+func TestAddProductDataSheet(t *testing.T) {
+	oidVal, err := AddProductDataSheet("Meta Caulk Collar", "./1.pdf", "mynewdatabase")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = getProductDataSheet(oidVal, "mynewdatabase", "../output/")
+	if err != nil {
+		log.Fatal(err)
+	}
+}

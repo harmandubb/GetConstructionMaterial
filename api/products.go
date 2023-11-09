@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -137,11 +138,11 @@ func dataBaseTransmit(sqlString string, database string, args ...any) error {
 	return nil
 }
 
-func AddProductDataSheet(name string, pdfPath string, database string) error {
+func AddProductDataSheet(name string, pdfPath string, database string) (uint32, error) {
 	p := connectToDataBase(database)
 	tx, err := p.Begin(context.Background())
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	//can start to initiative the large objects process
@@ -149,7 +150,7 @@ func AddProductDataSheet(name string, pdfPath string, database string) error {
 
 	oidVal, err := los.Create(context.Background(), 0)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	fmt.Println(oidVal)
@@ -157,7 +158,7 @@ func AddProductDataSheet(name string, pdfPath string, database string) error {
 	// should I upload the oid number to the table section
 	lo, err := los.Open(context.Background(), oidVal, pgx.LargeObjectModeWrite)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	defer lo.Close()
@@ -165,28 +166,51 @@ func AddProductDataSheet(name string, pdfPath string, database string) error {
 	// Can write the pdf to the large object since I have the  connection established.
 	file, err := os.Open(pdfPath)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	var fileBytes []byte
-
-	_, err = file.Read(fileBytes)
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	_, err = lo.Write(fileBytes)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	//store the oid value in the database table
-	sqlString := "UPDATE products SET data_sheet=$1 WHERE name='$2'"
+	sqlString := "UPDATE products SET data_sheet=$1 WHERE name=$2"
 
 	_, err = tx.Exec(context.Background(), sqlString, oidVal, name)
 	if err != nil {
+		return 0, err
+	}
+
+	return oidVal, nil
+}
+
+func getProductDataSheet(oidVal uint32, database string, outputPath string) error {
+	p := connectToDataBase(database)
+	tx, err := p.Begin(context.Background())
+	if err != nil {
 		return err
 	}
+
+	los := tx.LargeObjects()
+
+	lo, err := los.Open(context.Background(), oidVal, pgx.LargeObjectModeRead)
+	if err != nil {
+		return err
+	}
+	var buffer []byte
+
+	_, err = lo.Read(buffer)
+	if err != nil {
+		return err
+	}
+
+	os.WriteFile(outputPath, buffer, 0644)
 
 	return nil
 }
