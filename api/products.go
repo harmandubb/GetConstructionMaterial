@@ -18,10 +18,10 @@ type Product struct {
 	ID            int
 	Name          string
 	Category      string
-	Picture       uint32 // FUTURE: URLs to product images
-	PictureWidth  uint
-	PictureHeight uint
-	Data_Sheet    uint32
+	Picture       *uint32 // FUTURE: URLs to product images
+	PictureWidth  *uint
+	PictureHeight *uint
+	Data_Sheet    *uint32
 	Price         float64
 }
 
@@ -180,14 +180,13 @@ func AddProductDataSheet(name string, pdfPath string, database string) (uint32, 
 	}
 
 	//store the oid value in the database table
-	sqlString := "UPDATE products SET picture_w=$1 WHERE name=$2"
+	sqlString := "UPDATE products SET data_sheet=$1 WHERE name=$2"
 
-	test := 1
-
-	tag, err := tx.Exec(context.Background(), sqlString, test, name)
-
-	fmt.Println(tag)
-
+	_, err = tx.Exec(context.Background(), sqlString, oidVal, name)
+	if err != nil {
+		return 0, err
+	}
+	err = tx.Commit(context.Background())
 	if err != nil {
 		return 0, err
 	}
@@ -208,14 +207,37 @@ func getProductDataSheet(oidVal uint32, database string, outputPath string) erro
 	if err != nil {
 		return err
 	}
-	var buffer []byte
 
-	_, err = lo.Read(buffer)
+	file, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
-	os.WriteFile(outputPath, buffer, 0644)
+	//buffer
+	buffer := make([]byte, 1048576)
+
+	//Read in a loop
+	for {
+		n, err := lo.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				if _, err := file.Write(buffer[:n]); err != nil {
+					return err
+				}
+				break
+			}
+			return err
+		}
+
+		if n == 0 {
+			break
+		}
+
+		if _, err := file.Write(buffer[:n]); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

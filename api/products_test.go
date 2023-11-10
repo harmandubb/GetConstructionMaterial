@@ -1,8 +1,11 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"log"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -98,8 +101,46 @@ func TestAddProductDataSheet(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	err = getProductDataSheet(oidVal, "mynewdatabase", "../output/")
+	err = getProductDataSheet(oidVal, "mynewdatabase", "./output.pdf")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	f1, err := os.Open("./1.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f1.Close()
+
+	f2, err := os.Open("./output.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f2.Close()
+
+	const chunkSize = 1024
+
+	buf1 := make([]byte, chunkSize)
+	buf2 := make([]byte, chunkSize)
+
+	for {
+		n1, err1 := f1.Read(buf1)
+		n2, err2 := f2.Read(buf2)
+
+		if !bytes.Equal(buf1[:n1], buf2[:n2]) {
+			t.Error("Files are not the same")
+		}
+		// Check for errors
+		if err1 != nil || err2 != nil {
+			if err1 != err2 || err1 != io.EOF { // Different errors or not EOF
+				log.Fatal(err1)
+			}
+			if err1 == io.EOF && err2 == io.EOF { // Both files ended together
+				break
+			}
+		}
+	}
+
 }
