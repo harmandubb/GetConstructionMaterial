@@ -2,9 +2,13 @@ psql -h localhost -p 5432 -U postgres -d mynewdatabase -f init.sql
 
 docker run --env-file .env docstruction
 
+createdb [options] dbname // use this to create a database if it is already not created? Not sure why the below command didn't work. 
+
+
 psql -U userName
     CREATE DATABASE database_name WITH ENCODING 'UTF8'
 
 \c database_name // to connect to a database
 
 SELECT * FROM table_name 
+
