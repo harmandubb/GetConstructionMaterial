@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"image"
 	"io"
 	"log"
 	"os"
@@ -240,4 +241,61 @@ func getProductDataSheet(oidVal uint32, database string, outputPath string) erro
 	}
 
 	return nil
+}
+
+func AddProductPicture(name string, imgPath string, database string) (uint32, error) {
+	p := connectToDataBase(database)
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		return 0, err
+	}
+
+	//can start to initiative the large objects process
+	los := tx.LargeObjects()
+
+	oidVal, err := los.Create(context.Background(), 0)
+	if err != nil {
+		return 0, err
+	}
+
+	// should I upload the oid number to the table section
+	lo, err := los.Open(context.Background(), oidVal, pgx.LargeObjectModeWrite)
+	if err != nil {
+		return 0, err
+	}
+
+	defer lo.Close()
+
+	// Can write the pdf to the large object since I have the  connection established.
+	imgFile, err := os.Open(imgPath)
+	if err != nil {
+		return 0, err
+	}
+
+	_, format, err := image.Decode(imgFile)
+	fmt.Print(format)
+	if err != nil {
+		return 0, nil
+	}
+
+	return 0, nil
+
+	// _, err = lo.Write(fileBytes)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	// //store the oid value in the database table
+	// sqlString := "UPDATE products SET data_sheet=$1 WHERE name=$2"
+
+	// _, err = tx.Exec(context.Background(), sqlString, oidVal, name)
+	// if err != nil {
+	// 	return 0, err
+	// }
+	// err = tx.Commit(context.Background())
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	// return oidVal, nil
 }
