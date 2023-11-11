@@ -8,6 +8,8 @@ import (
 	"net/mail"
 	"net/smtp"
 	"os"
+
+	"github.com/sashabaranov/go-openai"
 )
 
 func SendEmail() {
@@ -87,4 +89,8 @@ func SendEmail() {
 		log.Fatal(err)
 	}
 
+
+
+func draftEmail(product string, category string){
+	client := openai.NewClient("youtocken")
 }
