@@ -13,6 +13,12 @@ import (
 	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+
+	"image/color"
+	_ "image/gif"
+	_ "image/jpeg"
+	"image/png"
+	_ "image/png"
 )
 
 type Product struct {
@@ -243,6 +249,42 @@ func getProductDataSheet(oidVal uint32, database string, outputPath string) erro
 	return nil
 }
 
+func createImageFromBytes(colorBytes []byte, img_w int, img_h int, imgOutput string) error {
+	img := image.NewRGBA(image.Rect(0, 0, img_w, img_h))
+
+	idx := 0
+
+	for y := 0; y < img_h; y++ {
+		for x := 0; x < img_w; x++ {
+			//Extract the rgba components
+			r := colorBytes[idx]
+			g := colorBytes[idx+1]
+			b := colorBytes[idx+2]
+			a := colorBytes[idx+3]
+
+			//set the pixal color in the new image
+			img.SetRGBA(x, y, color.RGBA{R: r, G: g, B: b, A: a})
+
+			//Move to the next color in the array
+			idx += 4
+		}
+	}
+
+	//Encode the new image to a file (will go with png as a standard)
+	outFile, err := os.Create(imgOutput + ".png")
+	if err != nil {
+		return err
+	}
+
+	defer outFile.Close()
+
+	if err := png.Encode(outFile, img); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func AddProductPicture(name string, imgPath string, database string) (uint32, error) {
 	p := connectToDataBase(database)
 	tx, err := p.Begin(context.Background())
@@ -267,16 +309,41 @@ func AddProductPicture(name string, imgPath string, database string) (uint32, er
 	defer lo.Close()
 
 	// Can write the pdf to the large object since I have the  connection established.
-	imgFile, err := os.Open(imgPath)
+	reader, err := os.Open(imgPath)
 	if err != nil {
 		return 0, err
 	}
 
-	_, format, err := image.Decode(imgFile)
-	fmt.Print(format)
+	defer reader.Close()
+
+	img, format, err := image.Decode(reader)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
+
+	fmt.Println(format) //not a good method becuase I need to know the format it was saved in.
+
+	bounds := img.Bounds()
+
+	pic_w := bounds.Max.X - bounds.Min.X
+	pic_h := bounds.Max.Y - bounds.Min.Y
+
+	var colorBytes []byte
+
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			// Get the color of the pixel
+			r, g, b, a := img.At(x, y).RGBA()
+
+			// Convert color values to bytes and append to the slice
+			// Note: RGBA returns color values in the range [0, 65535].
+			// Convert them to [0, 255] if necessary.
+			// lossing infromation when converting and when you get the values back I would need to decode back by making the values a significant byte
+			colorBytes = append(colorBytes, byte(r>>8), byte(g>>8), byte(b>>8), byte(a>>8))
+		}
+	}
+
+	createImageFromBytes(colorBytes, pic_w, pic_h, "./output")
 
 	return 0, nil
 
