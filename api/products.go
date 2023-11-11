@@ -285,11 +285,11 @@ func createImageFromBytes(colorBytes []byte, img_w int, img_h int, imgOutput str
 	return nil
 }
 
-func AddProductPicture(name string, imgPath string, database string) (uint32, error) {
+func AddProductPicture(name string, imgPath string, database string) (uint32, int, int, error) {
 	p := connectToDataBase(database)
 	tx, err := p.Begin(context.Background())
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	//can start to initiative the large objects process
@@ -297,13 +297,13 @@ func AddProductPicture(name string, imgPath string, database string) (uint32, er
 
 	oidVal, err := los.Create(context.Background(), 0)
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	// should I upload the oid number to the table section
 	lo, err := los.Open(context.Background(), oidVal, pgx.LargeObjectModeWrite)
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	defer lo.Close()
@@ -311,14 +311,14 @@ func AddProductPicture(name string, imgPath string, database string) (uint32, er
 	// Can write the pdf to the large object since I have the  connection established.
 	reader, err := os.Open(imgPath)
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	defer reader.Close()
 
 	img, format, err := image.Decode(reader)
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	fmt.Println(format) //not a good method becuase I need to know the format it was saved in.
@@ -343,26 +343,63 @@ func AddProductPicture(name string, imgPath string, database string) (uint32, er
 		}
 	}
 
-	createImageFromBytes(colorBytes, pic_w, pic_h, "./output")
+	_, err = lo.Write(colorBytes)
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
-	return 0, nil
+	//store the oid value in the database table
+	sqlString := "UPDATE products SET picture=$1, picture_w=$2, picture_h=$3 WHERE name=$4"
 
-	// _, err = lo.Write(fileBytes)
-	// if err != nil {
-	// 	return 0, err
-	// }
+	_, err = tx.Exec(context.Background(), sqlString, oidVal, pic_w, pic_h, name)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
-	// //store the oid value in the database table
-	// sqlString := "UPDATE products SET data_sheet=$1 WHERE name=$2"
+	return oidVal, pic_w, pic_h, nil
+}
 
-	// _, err = tx.Exec(context.Background(), sqlString, oidVal, name)
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// err = tx.Commit(context.Background())
-	// if err != nil {
-	// 	return 0, err
-	// }
+func getProductPicture(oidVal uint32, img_w int, img_h int, database string, outputPath string) error {
+	p := connectToDataBase(database)
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		return err
+	}
 
-	// return oidVal, nil
+	los := tx.LargeObjects()
+
+	lo, err := los.Open(context.Background(), oidVal, pgx.LargeObjectModeRead)
+	if err != nil {
+		return err
+	}
+
+	//buffer
+	buffer := make([]byte, 1024)
+	var imgBuffer []byte
+
+	//Read in a loop
+	for {
+		n, err := lo.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				imgBuffer = append(imgBuffer, buffer[:n]...)
+				break
+			}
+			return err
+		}
+
+		if n == 0 {
+			break
+		}
+
+		imgBuffer = append(imgBuffer, buffer[:n]...)
+	}
+
+	createImageFromBytes(imgBuffer, img_w, img_h, "./output")
+
+	return nil
 }
