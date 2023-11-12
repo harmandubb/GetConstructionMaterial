@@ -1,14 +1,17 @@
 package api
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/mail"
 	"net/smtp"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -91,6 +94,54 @@ func SendEmail() {
 
 
 
-func draftEmail(product string, category string){
-	client := openai.NewClient("youtocken")
+func draftEmail(product string, promptTemplatePath string, salesPersonName string, companyName string, product string) error {
+	err := godotenv.Load()
+	if err != nil {
+		return err
+	}
+	key := os.Getenv("OPEN_AI_KEY")
+	client := openai.NewClient(key)
+
+	prompt, err := createEmailRequestPrompt(promptTemplatePath,salesPersonName,companyName,product)
+	if err != nil{
+		return err
+	}
+
+	resp, err := client.CreateChatCompletion(
+								context.TODO(), 
+								openai.ChatCompletionRequest{
+									Model: openai.GPT3Dot5Turbo,
+									Messages: []openai.ChatCompletionMessage{
+										{
+										Role: openai.ChatMessageRoleUser,
+										Content: prompt,
+										},
+									},
+								},
+							)	
+	if err != nil {
+		fmt.Printf("ChatCompletion error: %v\n", err)
+		return err 
+	}
+
+
+}
+
+func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string, companyName string, product string) (string, error){
+	file, err := os.Open(promptTemplatePath)
+	if err != nil {
+		return nil, err
+	}
+
+	emailByte, err := io.ReadAll(file)
+	if err != nil{
+		return nil, err
+	}
+
+	emailString := string(emailByte)
+
+	prompt := fmt.Sprintf(emailString, salesPersonName,companyName, product)
+
+	return prompt, nil
+
 }
