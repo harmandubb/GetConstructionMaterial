@@ -3,13 +3,14 @@ package api
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/mail"
 	"net/smtp"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
@@ -29,10 +30,15 @@ type EmailContents struct {
 	CompanyName string
 }
 
-func SendEmail(body string, subj string, toEmail string) {
+func SendEmail(body string, subj string, toEmail string) error {
+	err := godotenv.Load()
+	if err != nil {
+		return err
+	}
+
 	// Import the email vairables
 	originEmail := os.Getenv("EMAIL")
-	password := os.Getenv("PASSWORD")
+	password := os.Getenv("APPPASSWORD")
 
 	from := mail.Address{"", originEmail}
 	to := mail.Address{"", toEmail}
@@ -64,45 +70,47 @@ func SendEmail(body string, subj string, toEmail string) {
 
 	c, err := smtp.Dial(servername)
 	if err != nil {
-		log.Fatal("Error:", err)
+		return err
 	}
 
 	c.StartTLS(tlsconfig)
 
 	// Auth
 	if err = c.Auth(auth); err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	// Set the sender and recipient first
 	if err := c.Mail(originEmail); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	if err := c.Rcpt("hdubb1.ubc@gmail.com"); err != nil {
-		log.Fatal(err)
+	if err := c.Rcpt(toEmail); err != nil {
+		return err
 	}
 
 	w, err := c.Data()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	_, err = w.Write([]byte(message))
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	err = w.Close()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Send the QUIT command and close the connection.
 	err = c.Quit()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 
 }
 
@@ -160,5 +168,25 @@ func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string,
 	prompt := fmt.Sprintf(emailString, salesPersonName, companyName, product)
 
 	return prompt, nil
+
+}
+
+func parseGPTEmailResponse(gptResponse string) (string, string, error) {
+	subStartIndex := strings.Index(gptResponse, "Subject:")
+
+	if subStartIndex == -1 {
+		return "", "", errors.New("subject line not found")
+	}
+
+	subEndIndex := strings.Index(gptResponse[subStartIndex:], "\n")
+
+	flufLen := len("Subject: ")
+
+	subj := gptResponse[subStartIndex+flufLen : subEndIndex]
+
+	//The body of the paragraph should be the rest of the stirng
+	body := gptResponse[subEndIndex+2:]
+
+	return subj, body, nil
 
 }
