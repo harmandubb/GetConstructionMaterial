@@ -15,15 +15,13 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-func SendEmail() {
+func SendEmail(body string, subj string, toEmail string) {
 	// Import the email vairables
 	originEmail := os.Getenv("EMAIL")
 	password := os.Getenv("PASSWORD")
 
 	from := mail.Address{"", originEmail}
-	to := mail.Address{"", "hdubb1.ubc@gmail.com"}
-	subj := "This is the email subject"
-	body := "This is an example body.\n With two lines."
+	to := mail.Address{"", toEmail}
 
 	// Setup headers
 	headers := make(map[string]string) //creates an emptry map (dictionary that can be populated)
@@ -92,55 +90,56 @@ func SendEmail() {
 		log.Fatal(err)
 	}
 
+}
 
-
-func draftEmail(product string, promptTemplatePath string, salesPersonName string, companyName string, product string) error {
+func draftEmail(product string, promptTemplatePath string, salesPersonName string, companyName string) (string, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return err
+		return "", err
 	}
 	key := os.Getenv("OPEN_AI_KEY")
 	client := openai.NewClient(key)
 
-	prompt, err := createEmailRequestPrompt(promptTemplatePath,salesPersonName,companyName,product)
-	if err != nil{
-		return err
+	prompt, err := createEmailRequestPrompt(promptTemplatePath, salesPersonName, companyName, product)
+	if err != nil {
+		return "", err
 	}
 
 	resp, err := client.CreateChatCompletion(
-								context.TODO(), 
-								openai.ChatCompletionRequest{
-									Model: openai.GPT3Dot5Turbo,
-									Messages: []openai.ChatCompletionMessage{
-										{
-										Role: openai.ChatMessageRoleUser,
-										Content: prompt,
-										},
-									},
-								},
-							)	
+		context.TODO(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: prompt,
+				},
+			},
+		},
+	)
 	if err != nil {
 		fmt.Printf("ChatCompletion error: %v\n", err)
-		return err 
+		return "", err
 	}
 
+	return resp.Choices[0].Message.Content, nil
 
 }
 
-func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string, companyName string, product string) (string, error){
+func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string, companyName string, product string) (string, error) {
 	file, err := os.Open(promptTemplatePath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	emailByte, err := io.ReadAll(file)
-	if err != nil{
-		return nil, err
+	if err != nil {
+		return "", err
 	}
 
 	emailString := string(emailByte)
 
-	prompt := fmt.Sprintf(emailString, salesPersonName,companyName, product)
+	prompt := fmt.Sprintf(emailString, salesPersonName, companyName, product)
 
 	return prompt, nil
 
