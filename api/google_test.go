@@ -5,7 +5,7 @@ import (
 )
 
 func TestReadGmailEmails(t *testing.T) {
-	err := ReadGmailEmails()
+	err := connectToGmail()
 	if err != nil {
 		t.Error(err)
 	}
