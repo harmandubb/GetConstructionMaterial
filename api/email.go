@@ -15,6 +15,20 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
+type EmailOptions struct {
+	OriginEmail string
+	Password    string
+	ToEmail     string
+	Subj        string
+	Body        string
+}
+
+type EmailContents struct {
+	Product     string
+	SalesPerson string
+	CompanyName string
+}
+
 func SendEmail(body string, subj string, toEmail string) {
 	// Import the email vairables
 	originEmail := os.Getenv("EMAIL")
@@ -138,6 +152,10 @@ func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string,
 	}
 
 	emailString := string(emailByte)
+
+	if salesPersonName == "" {
+		salesPersonName = "the sales team"
+	}
 
 	prompt := fmt.Sprintf(emailString, salesPersonName, companyName, product)
 
