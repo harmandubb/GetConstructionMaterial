@@ -13,6 +13,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
+
+	"github.com/agnivade/levenshtein"
 )
 
 // Retrieve a token, saves the token, then returns the generated client.
@@ -70,7 +72,7 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func ConnectToGmail() {
+func ConnectToGmail() *gmail.Service {
 	ctx := context.Background()
 	b, err := os.ReadFile("/Users/harmandeepdubb/Library/CloudStorage/OneDrive-Personal/Desktop/GetConstructionMaterial/Auth2/credentials.json")
 	if err != nil {
@@ -89,31 +91,40 @@ func ConnectToGmail() {
 		log.Fatalf("Unable to retrieve Gmail client: %v", err)
 	}
 
+	return srv
+
+}
+
+func checkMessage(srv *gmail.Service, subj string, loc string, body string) (bool, error) {
 	user := "me"
-	r, err := srv.Users.Messages.List(user).Q("In:sent and Subject:Docstruction: Inquiry - Meta Caulk Fire Stop Collar Availability and Specifications").Do()
+
+	queryString := fmt.Sprintf("In:%s and Subject:%s", loc, subj)
+
+	r, err := srv.Users.Messages.List(user).Q(queryString).Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve labels: %v", err)
+		log.Fatalf("Unable to retrieve messages: %v", err)
 	}
-	// if len(r.Labels) == 0 {
-	// 	fmt.Println("No labels found.")
-	// 	return
-	// }
-	fmt.Println("Messages:")
+
 	for _, l := range r.Messages {
 		msg, err := srv.Users.Messages.Get(user, l.Id).Do()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		body, _ := base64.URLEncoding.DecodeString(msg.Payload.Body.Data)
+		mesgBody, _ := base64.URLEncoding.DecodeString(msg.Payload.Body.Data)
 
-		fmt.Println(msg)
-		fmt.Println(string(body))
-		fmt.Println(1)
+		stringMesgBody := string(mesgBody)
+
+		distance := levenshtein.ComputeDistance(body, stringMesgBody)
+
+		fmt.Println(distance)
+
+		if distance < 500 {
+			return true, nil
+		}
+
 	}
 
-}
-
-func retrieveEmail(subj string, body string) {
+	return false, err
 
 }

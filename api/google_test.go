@@ -1,9 +1,7 @@
 package api
 
-import (
-	"testing"
-)
+// func TestReadGmailEmails(t *testing.T) {
+// 	srv := ConnectToGmail()
+// 	result, err := retrieveEmail(srv, "Docstruction", "Test", "sent")
 
-func TestReadGmailEmails(t *testing.T) {
-	ConnectToGmail()
-}
+// }
