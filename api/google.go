@@ -5,10 +5,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"sync/atomic"
+	"time"
 
+	"cloud.google.com/go/pubsub"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
@@ -127,4 +131,61 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 
 	return false, err
 
+}
+
+func publish(w io.Writer, projectID, topicID, msg string) error {
+	projectID = "getconstructionmaterial"
+	topicID = "getconstructionmaterial-topic"
+	msg = "Hello World"
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return fmt.Errorf("pubsub: NewClient: %w", err)
+	}
+	defer client.Close()
+
+	t := client.Topic(topicID)
+	result := t.Publish(ctx, &pubsub.Message{
+		Data: []byte(msg),
+	})
+	// Block until the result is returned and a server-generated
+	// ID is returned for the published message.
+	id, err := result.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("pubsub: result.Get: %w", err)
+	}
+	fmt.Fprintf(w, "Published a message; msg ID: %v\n", id)
+	return nil
+}
+
+func pullMsgs(w io.Writer, projectID, subID string) error {
+	// projectID := "my-project-id"
+	// subID := "my-sub"
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	sub := client.Subscription(subID)
+
+	// Receive messages for 10 seconds, which simplifies testing.
+	// Comment this out in production, since `Receive` should
+	// be used as a long running operation.
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	var received int32
+	err = sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
+		fmt.Fprintf(w, "Got message: %q\n", string(msg.Data))
+		atomic.AddInt32(&received, 1)
+		msg.Ack()
+	})
+	if err != nil {
+		return fmt.Errorf("sub.Receive: %w", err)
+	}
+	fmt.Fprintf(w, "Received %d messages\n", received)
+
+	return nil
 }
