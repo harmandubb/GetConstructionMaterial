@@ -189,3 +189,22 @@ func pullMsgs(w io.Writer, projectID, subID string) error {
 
 	return nil
 }
+
+func pushNotificationSetUp(srv *gmail.Service) (*gmail.WatchResponse, error) {
+	usersrv := gmail.NewUsersService(srv)
+
+	watchRqst := gmail.WatchRequest{
+		TopicName: "projects/getconstructionmaterial/topics/getconstructionmaterial-topic",
+		LabelIds:  []string{"INBOX"},
+	}
+
+	watchResponse, err := usersrv.Watch("me", &watchRqst).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Println(watchResponse.Expiration)
+
+	return watchResponse, nil
+
+}
