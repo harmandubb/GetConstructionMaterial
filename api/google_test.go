@@ -16,11 +16,13 @@ func TestPublish(t *testing.T) {
 	err := publish(os.Stdout, "getconstructionmaterial", "getconstructionmaterial-topic", "Hello World")
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 
 	err = pullMsgs(os.Stdout, "getconstructionmaterial", "getconstructionmaterial-sub")
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 
 }
@@ -36,4 +38,22 @@ func TestPushNotificationSetUp(t *testing.T) {
 
 	//TODO: Set up renewing of the watch daily
 	//TODO: Set up an endpoint to receive the push notification updates.
+}
+
+func TestNewEmailReceive(t *testing.T) {
+	srv := ConnectToGmail()
+	_, err := pushNotificationSetUp(srv)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+
+	// time.Sleep(time.Second * 30)
+
+	err = pullMsgs(os.Stdout, "getconstructionmaterial", "getconstructionmaterial-sub")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+
 }

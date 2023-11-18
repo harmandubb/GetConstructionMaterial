@@ -203,8 +203,6 @@ func pushNotificationSetUp(srv *gmail.Service) (*gmail.WatchResponse, error) {
 		return nil, err
 	}
 
-	// fmt.Println(watchResponse.Expiration)
-
 	return watchResponse, nil
 
 }
