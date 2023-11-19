@@ -78,7 +78,9 @@ func saveToken(path string, token *oauth2.Token) {
 
 func ConnectToGmail() *gmail.Service {
 	ctx := context.Background()
-	b, err := os.ReadFile("/Users/harmandeepdubb/Library/CloudStorage/OneDrive-Personal/Desktop/GetConstructionMaterial/Auth2/credentials.json")
+	// b, err := os.ReadFile("/Users/harmandeepdubb/Library/CloudStorage/OneDrive-Personal/Desktop/GetConstructionMaterial/Auth2/credentials.json")
+	b, err := os.ReadFile("../Auth2/credentials.json")
+
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -131,6 +133,44 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 
 	return false, err
 
+}
+
+func getLatestUnreadMessage(srv *gmail.Service) error {
+	user := "me"
+
+	queryString := fmt.Sprintf("In:inbox and Is:unread")
+
+	r, err := srv.Users.Messages.List(user).Q(queryString).Do()
+	if err != nil {
+		log.Fatalf("Unable to retrieve messages: %v", err)
+	}
+
+	msg, err := srv.Users.Messages.Get(user, r.Messages[0].Id).Do()
+
+	fmt.Println(msg.Payload.Headers) // Check how the header structure looks like
+
+	// mesgBody, _ := base64.URLEncoding.DecodeString(msg.Payload.Body.Data)
+
+	// TODO:
+	// 1. determine what product the email is related to
+	// 		- The subject of the email is likely to be the same as what is sent out
+	// 		- The name of the product would be be included in the email but may not be standard.
+	// 		- Could prompt Chat GPT to write the subject in a way that would encode what product we are looking for so I just need to use an algorithum to extract the product name
+	// 2. Does the sales person have the product
+	// 		- Just ask chat gpt if the emai shows a confrimation that the product is present and encode the information in a specific reply
+	// 3. What information did the sales person provide
+	// 		- Datasheet (attachement) --> Focus
+	// 		- price (in line or attachement) --> Focus
+	// 		- Brand (in line or attachement)
+	// 		- Model (in line or attachement)
+	// As an initial version of the app I can show the datasheet to the user for them to decide
+	// if what we have is what they are looking for.
+	// This information can be encoded in the response from chatgpt.
+	// 4. Who is the sales person or is it from the general email?
+	// 		- I can check the database if that company has that particular sales person present.
+	//		- this would need to be a seperate table to encode the information of the sales team at different locations.
+
+	return err
 }
 
 func publish(w io.Writer, projectID, topicID, msg string) error {
