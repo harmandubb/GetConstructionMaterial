@@ -57,3 +57,8 @@ func TestNewEmailReceive(t *testing.T) {
 	}
 
 }
+
+func TestGetLatestUnreadMessage(t *testing.T) {
+	srv := ConnectToGmail()
+	getLatestUnreadMessage(srv)
+}
