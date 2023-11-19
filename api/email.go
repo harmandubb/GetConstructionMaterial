@@ -114,18 +114,13 @@ func SendEmail(body string, subj string, toEmail string) error {
 
 }
 
-func draftEmail(product string, promptTemplatePath string, salesPersonName string, companyName string) (string, error) {
+func promptGPT(prompt string) (string, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return "", err
 	}
 	key := os.Getenv("OPEN_AI_KEY")
 	client := openai.NewClient(key)
-
-	prompt, err := createEmailRequestPrompt(promptTemplatePath, salesPersonName, companyName, product)
-	if err != nil {
-		return "", err
-	}
 
 	resp, err := client.CreateChatCompletion(
 		context.TODO(),
@@ -166,6 +161,25 @@ func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string,
 	}
 
 	prompt := fmt.Sprintf(emailString, salesPersonName, companyName, product)
+
+	return prompt, nil
+
+}
+
+func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body string) (string, error) {
+	file, err := os.Open(receiveAnalysisTemplatePath)
+	if err != nil {
+		return "", err
+	}
+
+	emailByte, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	emailString := string(emailByte)
+
+	prompt := fmt.Sprintf(emailString, body)
 
 	return prompt, nil
 

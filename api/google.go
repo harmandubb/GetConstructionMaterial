@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -20,6 +21,22 @@ import (
 
 	"github.com/agnivade/levenshtein"
 )
+
+type EmailInfo struct {
+	Date         time.Time
+	Subj         string
+	From         string
+	Body         string
+	Body_size    int64
+	attachmentID string
+}
+
+type ProductInfo struct {
+	Date      time.Time
+	Name      string
+	Price     float64
+	DataSheet bool
+}
 
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) *http.Client {
@@ -78,7 +95,9 @@ func saveToken(path string, token *oauth2.Token) {
 
 func ConnectToGmail() *gmail.Service {
 	ctx := context.Background()
-	b, err := os.ReadFile("/Users/harmandeepdubb/Library/CloudStorage/OneDrive-Personal/Desktop/GetConstructionMaterial/Auth2/credentials.json")
+	// b, err := os.ReadFile("/Users/harmandeepdubb/Library/CloudStorage/OneDrive-Personal/Desktop/GetConstructionMaterial/Auth2/credentials.json")
+	b, err := os.ReadFile("../Auth2/credentials.json")
+
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -130,6 +149,104 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 	}
 
 	return false, err
+
+}
+
+func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
+	user := "me"
+
+	queryString := fmt.Sprintf("In:inbox and Is:unread")
+
+	var empty EmailInfo
+
+	r, err := srv.Users.Messages.List(user).Q(queryString).Do()
+	if err != nil {
+		log.Fatalf("Unable to retrieve messages: %v", err)
+	}
+
+	msg, err := srv.Users.Messages.Get(user, r.Messages[0].Id).Do()
+	if err != nil {
+		return empty, err
+	}
+
+	headers := msg.Payload.Headers // Check how the header structure looks like
+
+	date, err := time.Parse("RFC1123", headers[16].Value)
+	if err != nil {
+		fmt.Printf("Time Parse Error: %s", err)
+	}
+
+	body, err := base64.URLEncoding.DecodeString(msg.Payload.Body.Data)
+	if err != nil {
+		fmt.Printf("No message body present: %s", err)
+	}
+
+	emailInfo := EmailInfo{
+		Date:         date,
+		Subj:         headers[22].Value,
+		From:         headers[23].Value,
+		Body:         string(body),
+		Body_size:    msg.Payload.Body.Size,
+		attachmentID: msg.Payload.Body.AttachmentId,
+	}
+
+	return emailInfo, nil
+
+}
+
+// TODO:
+// 1. determine what product the email is related to
+// 		- The subject of the email is likely to be the same as what is sent out
+// 		- The name of the product would be be included in the email but may not be standard.
+// 		- Could prompt Chat GPT to write the subject in a way that would encode what product we are looking for so I just need to use an algorithum to extract the product name
+// 2. Does the sales person have the product
+// 		- Just ask chat gpt if the emai shows a confrimation that the product is present and encode the information in a specific reply
+// 3. What information did the sales person provide
+// 		- Datasheet (attachement) --> Focus
+// 		- price (in line or attachement) --> Focus
+// 		- Brand (in line or attachement)
+// 		- Model (in line or attachement)
+// As an initial version of the app I can show the datasheet to the user for them to decide
+// if what we have is what they are looking for.
+// This information can be encoded in the response from chatgpt.
+// 4. Who is the sales person or is it from the general email?
+// 		- I can check the database if that company has that particular sales person present.
+//		- this would need to be a seperate table to encode the information of the sales team at different locations.
+
+func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
+	//Extract the name of the product in questions
+	first := strings.Index(emailInfo.Subj, ":")
+	last := strings.Index(emailInfo.Subj, "-")
+
+	productName := emailInfo.Subj[first+2 : last-2]
+
+	var product ProductInfo
+
+	emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
+	if err != nil {
+		return false, err
+	}
+
+	gptResp, err := promptGPT(emailAnalysisiPrompt)
+	if err != nil {
+		return false, err
+	}
+
+	//gpt response in the form of y,n,y (they stock the product, price is given, datasheet is provided)
+	// Only continue with the insert if the stock is present
+
+	respArray := strings.Split(gptResp, ",")
+
+	if respArray[0] != "y" {
+		return false, nil
+	} else {
+		// They do stock the product
+		if respArray[1] == "y" {
+			product.Price //Need to rework the chat gpt prompt to see if the inline email response can be given right away
+		}
+	}
+
+	return true, nil
 
 }
 
