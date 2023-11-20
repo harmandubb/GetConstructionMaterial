@@ -218,38 +218,26 @@ func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
 	// // if present is avialable then we will continue the struct
 	var emailProductInfo EmailProductInfo
 
-	// gptResponse = strings.ToLower(gptResponse)
-	// presentIndex := strings.Index(gptResponse, "present")
+	gptResponse = strings.ToLower(gptResponse)
 
-	// i := 0
-	// for true {
+	present := gptAnalysisPresent(gptResponse)
 
-	// 	if string(gptResponse[presentIndex+i]) == "n" || string(gptResponse[presentIndex+i]) == "y" {
-	// 		break
-	// 	}
-	// }
+	emailProductInfo.Present = present
 
-	// if string(gptResponse[presentIndex+i]) != "y" {
-	// 	emailProductInfo.Present = false
-	// 	emailProductInfo.Data_Sheet = false
-	// 	emailProductInfo.Price = 0
+	if !present {
+		emailProductInfo.Currency = ""
+		emailProductInfo.Data_Sheet = false
+		emailProductInfo.Price = 0
 
-	// 	return emailProductInfo, nil
-	// }
+		return emailProductInfo, nil
+	}
 
-	// emailProductInfo.Present = true
+	price, currency := gptAnalysisPrice(gptResponse)
+	emailProductInfo.Price = price
+	emailProductInfo.Currency = currency
 
-	// re := regexp.MustCompile(`\d+\.\d+`)
-	// matches := re.FindStringSubmatch(gptResponse)
-
-	// price, err := strconv.ParseFloat(matches[0])
-	// if err != nil {
-	// 	return emailProductInfo, err
-	// }
-
-	// emailProductInfo.Price = price
-
-	// // See if I can extract a currency?
+	datasheet := gptAnalysisDataSheet(gptResponse)
+	emailProductInfo.Data_Sheet = datasheet
 
 	return emailProductInfo, nil
 

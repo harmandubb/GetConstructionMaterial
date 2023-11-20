@@ -103,3 +103,22 @@ func TestGptAnalysisDataSheet(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestParseGPTAnalysisResponse(t *testing.T) {
+	productInfo, err := parseGPTAnalysisResponse("Based on the provided response: present: y price: 12.32 CAD datasheet: n")
+	if err != nil {
+		t.Fail()
+	}
+
+	actualProductInfo := EmailProductInfo{
+		Present:    true,
+		Price:      12.32,
+		Currency:   "CAD",
+		Data_Sheet: false,
+	}
+
+	if productInfo != actualProductInfo {
+		t.Fail()
+	}
+
+}
