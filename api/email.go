@@ -314,3 +314,25 @@ func gptAnalysisPrice(str string) (float64, string) {
 
 	return 0, ""
 }
+
+func gptAnalysisDataSheet(str string) bool {
+
+	re := regexp.MustCompile(`datasheet: ([yn])`)
+	matches := re.FindStringSubmatch(str)
+
+	if len(matches) > 1 {
+		presentValue := matches[1]
+
+		switch presentValue {
+		case "y":
+			return true
+		case "n":
+			return false
+		default:
+			return false
+		}
+	} else {
+		fmt.Println("Pattern not found")
+		return false
+	}
+}

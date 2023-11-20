@@ -89,3 +89,17 @@ func TestGptAnalysisPrice(t *testing.T) {
 	}
 
 }
+
+func TestGptAnalysisDataSheet(t *testing.T) {
+	if gptAnalysisDataSheet(";jasd;lfjasdlfjsldkfj present: n") != false {
+		t.Fail()
+	}
+
+	if gptAnalysisDataSheet("present: y price: 12.32 datasheet: n") != false {
+		t.Fail()
+	}
+
+	if gptAnalysisDataSheet("present: y price: 12.32 datasheet: y") != true {
+		t.Fail()
+	}
+}
