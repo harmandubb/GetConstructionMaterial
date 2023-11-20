@@ -11,6 +11,7 @@ import (
 	"net/smtp"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -274,4 +275,42 @@ func gptAnalysisPresent(str string) bool {
 		fmt.Println("Pattern not found")
 		return false
 	}
+}
+
+func gptAnalysisPrice(str string) (float64, string) {
+	// Regular expression to find a pattern like "6.16 CAD"
+	// and capture the currency code as well
+	defaultCurrency := "CAD"
+
+	re := regexp.MustCompile(`price: (\d+\.\d+)(?: ([A-Z]{3}))?`)
+	matches := re.FindStringSubmatch(str)
+
+	if len(matches) >= 2 {
+		priceStr := matches[1]
+		currency := defaultCurrency // Default currency value
+
+		// Check if currency is captured
+		if len(matches) > 2 && matches[2] != "" {
+			currency = matches[2]
+		}
+
+		// Convert the extracted string to a float
+		price, err := strconv.ParseFloat(priceStr, 64)
+		if err != nil {
+			fmt.Println("Error parsing price:", err)
+			return 0, ""
+		}
+
+		// fmt.Printf("Extracted Price: %.2f %s\n", price, currency)
+
+		if currency == "" {
+			currency = defaultCurrency
+		}
+
+		return price, currency
+	} else {
+		fmt.Println("Price or currency not found")
+	}
+
+	return 0, ""
 }

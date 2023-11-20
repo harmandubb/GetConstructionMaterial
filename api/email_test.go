@@ -50,3 +50,42 @@ func TestGptAnalysisPresent(t *testing.T) {
 	}
 
 }
+
+func TestGptAnalysisPrice(t *testing.T) {
+	price, currency := gptAnalysisPrice("Based on the provided response: present: y price: 6.16 CAD per unit datasheet: n")
+
+	if price != 6.16 {
+		t.Fail()
+	}
+	if currency != "CAD" {
+		t.Fail()
+	}
+
+	price, currency = gptAnalysisPrice("Based on the provided response: present: y price: 6.16 per unit datasheet: n")
+
+	if price != 6.16 {
+		t.Fail()
+	}
+	if currency != "CAD" {
+		t.Fail()
+	}
+
+	price, currency = gptAnalysisPrice("present: y price: 12.32 USD datasheet: n")
+
+	if price != 12.32 {
+		t.Fail()
+	}
+	if currency != "USD" {
+		t.Fail()
+	}
+
+	price, currency = gptAnalysisPrice("present: y price: 12.32 datasheet: n")
+
+	if price != 12.32 {
+		t.Fail()
+	}
+	if currency != "CAD" {
+		t.Fail()
+	}
+
+}
