@@ -10,6 +10,7 @@ import (
 	"net/mail"
 	"net/smtp"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -28,6 +29,13 @@ type EmailContents struct {
 	Product     string
 	SalesPerson string
 	CompanyName string
+}
+
+type EmailProductInfo struct {
+	Present    bool
+	Price      float64
+	Currency   string
+	Data_Sheet bool
 }
 
 func SendEmail(body string, subj string, toEmail string) error {
@@ -203,4 +211,67 @@ func parseGPTEmailResponse(gptResponse string) (string, string, error) {
 
 	return subj, body, nil
 
+}
+
+func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
+	// // if present is avialable then we will continue the struct
+	var emailProductInfo EmailProductInfo
+
+	// gptResponse = strings.ToLower(gptResponse)
+	// presentIndex := strings.Index(gptResponse, "present")
+
+	// i := 0
+	// for true {
+
+	// 	if string(gptResponse[presentIndex+i]) == "n" || string(gptResponse[presentIndex+i]) == "y" {
+	// 		break
+	// 	}
+	// }
+
+	// if string(gptResponse[presentIndex+i]) != "y" {
+	// 	emailProductInfo.Present = false
+	// 	emailProductInfo.Data_Sheet = false
+	// 	emailProductInfo.Price = 0
+
+	// 	return emailProductInfo, nil
+	// }
+
+	// emailProductInfo.Present = true
+
+	// re := regexp.MustCompile(`\d+\.\d+`)
+	// matches := re.FindStringSubmatch(gptResponse)
+
+	// price, err := strconv.ParseFloat(matches[0])
+	// if err != nil {
+	// 	return emailProductInfo, err
+	// }
+
+	// emailProductInfo.Price = price
+
+	// // See if I can extract a currency?
+
+	return emailProductInfo, nil
+
+}
+
+func gptAnalysisPresent(str string) bool {
+
+	re := regexp.MustCompile(`present: ([yn])`)
+	matches := re.FindStringSubmatch(str)
+
+	if len(matches) > 1 {
+		presentValue := matches[1]
+
+		switch presentValue {
+		case "y":
+			return true
+		case "n":
+			return false
+		default:
+			return false
+		}
+	} else {
+		fmt.Println("Pattern not found")
+		return false
+	}
 }

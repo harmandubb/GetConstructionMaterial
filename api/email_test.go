@@ -39,3 +39,14 @@ func TestDraftEmail(t *testing.T) {
 	// fmt.Println(emailDraft)
 
 }
+
+func TestGptAnalysisPresent(t *testing.T) {
+	if gptAnalysisPresent("ajdflkasdlkfjalkdjflajdfl;jasd;lfjasdlfjsldkfj present: n") == true {
+		t.Fail()
+	}
+
+	if gptAnalysisPresent("jfokajd present: y jdkfaodkfh;oaid") == false {
+		t.Fail()
+	}
+
+}

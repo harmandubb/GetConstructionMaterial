@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -214,37 +213,37 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 //		- this would need to be a seperate table to encode the information of the sales team at different locations.
 
 func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
-	//Extract the name of the product in questions
-	first := strings.Index(emailInfo.Subj, ":")
-	last := strings.Index(emailInfo.Subj, "-")
+	// //Extract the name of the product in questions
+	// first := strings.Index(emailInfo.Subj, ":")
+	// last := strings.Index(emailInfo.Subj, "-")
 
-	productName := emailInfo.Subj[first+2 : last-2]
+	// productName := emailInfo.Subj[first+2 : last-2]
 
-	var product ProductInfo
+	// var product ProductInfo
 
-	emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
-	if err != nil {
-		return false, err
-	}
+	// emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
+	// if err != nil {
+	// 	return false, err
+	// }
 
-	gptResp, err := promptGPT(emailAnalysisiPrompt)
-	if err != nil {
-		return false, err
-	}
+	// gptResp, err := promptGPT(emailAnalysisiPrompt)
+	// if err != nil {
+	// 	return false, err
+	// }
 
-	//gpt response in the form of y,n,y (they stock the product, price is given, datasheet is provided)
-	// Only continue with the insert if the stock is present
+	// //gpt response in the form of y,n,y (they stock the product, price is given, datasheet is provided)
+	// // Only continue with the insert if the stock is present
 
-	respArray := strings.Split(gptResp, ",")
+	// respArray := strings.Split(gptResp, ",")
 
-	if respArray[0] != "y" {
-		return false, nil
-	} else {
-		// They do stock the product
-		if respArray[1] == "y" {
-			product.Price //Need to rework the chat gpt prompt to see if the inline email response can be given right away
-		}
-	}
+	// if respArray[0] != "y" {
+	// 	return false, nil
+	// } else {
+	// 	// They do stock the product
+	// 	if respArray[1] == "y" {
+	// 		product.Price //Need to rework the chat gpt prompt to see if the inline email response can be given right away
+	// 	}
+	// }
 
 	return true, nil
 
