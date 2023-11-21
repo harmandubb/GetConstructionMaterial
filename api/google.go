@@ -34,6 +34,7 @@ type ProductInfo struct {
 	Date      time.Time
 	Name      string
 	Price     float64
+	Currency  string
 	DataSheet bool
 }
 
@@ -216,28 +217,48 @@ func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
 
 	// var product ProductInfo
 
-	// emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
-	// if err != nil {
-	// 	return false, err
-	// }
+	emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
+	if err != nil {
+		return false, err
+	}
 
-	// gptResp, err := promptGPT(emailAnalysisiPrompt)
-	// if err != nil {
-	// 	return false, err
-	// }
+	gptResp, err := promptGPT(emailAnalysisiPrompt)
+	if err != nil {
+		return false, err
+	}
 
 	// // Only continue with the insert if the stock is present
 
-	// respArray := strings.Split(gptResp, ",")
+	emailProductInfo, err := parseGPTAnalysisResponse(gptResp)
+	if err != nil {
+		return false, err
+	}
 
-	// if respArray[0] != "y" {
-	// 	return false, nil
-	// } else {
-	// 	// They do stock the product
-	// 	if respArray[1] == "y" {
-	// 		product.Price //Need to rework the chat gpt prompt to see if the inline email response can be given right away
-	// 	}
-	// }
+	if !emailProductInfo.Present {
+		return false, err
+	}
+
+	name, err := extractProductName(emailInfo.Subj)
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Println(time.Now())
+
+	//extract datasheet if needed
+	if emailProductInfo.Data_Sheet != false {
+		//do something to get the datasheet from the email
+	}
+
+	product := ProductInfo{
+		Date:      time.Now(),
+		Name:      name,
+		Price:     emailProductInfo.Price,
+		Currency:  emailProductInfo.Currency,
+		DataSheet: emailProductInfo.Data_Sheet,
+	}
+
+	//extract
 
 	return true, nil
 
@@ -314,5 +335,9 @@ func pushNotificationSetUp(srv *gmail.Service) (*gmail.WatchResponse, error) {
 	}
 
 	return watchResponse, nil
+
+}
+
+func getDataSheet(srv gmail.Service, datasheetID string) error {
 
 }
