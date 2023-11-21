@@ -22,12 +22,12 @@ import (
 )
 
 type EmailInfo struct {
-	Date         time.Time
-	Subj         string
-	From         string
-	Body         string
-	Body_size    int64
-	attachmentID string
+	Date        time.Time
+	Subj        string
+	From        string
+	Body        string
+	Body_size   int64
+	attachments []string
 }
 
 type ProductInfo struct {
@@ -164,17 +164,44 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 		log.Fatalf("Unable to retrieve messages: %v", err)
 	}
 
-	msg, err := srv.Users.Messages.Get(user, r.Messages[0].Id).Do()
+	msgID := r.Messages[0].Id
+
+	msg, err := srv.Users.Messages.Get(user, msgID).Do()
 	if err != nil {
 		return empty, err
 	}
 
 	headers := msg.Payload.Headers // Check how the header structure looks like
 
-	date, err := time.Parse("RFC1123", headers[16].Value)
-	if err != nil {
-		fmt.Printf("Time Parse Error: %s", err)
+	var attachementsLocations []string
+
+	for _, part := range msg.Payload.Parts {
+		if part.Filename != "" && part.Body.AttachmentId != "" {
+			attachment, err := srv.Users.Messages.Attachments.Get("me", msgID, part.Body.AttachmentId).Do()
+			if err != nil {
+				return empty, err
+			}
+
+			data, err := base64.URLEncoding.DecodeString(attachment.Data)
+			if err != nil {
+				return empty, err
+			}
+
+			// Save the attachment
+			os.WriteFile(part.Filename, data, 0644)
+			fmt.Printf("Attachment %s downloaded.\n", part.Filename)
+			attachementsLocations = append(attachementsLocations, part.Filename)
+		}
 	}
+
+	// fmt.Println(headers[23].Value)
+	// // date, err := time.Parse("RFC1123", headers[16].Value)
+
+	// date, err := time.Parse("RFC1123Z", headers[23].Value)
+
+	// if err != nil {
+	// 	fmt.Printf("Time Parse Error: %s", err)
+	// }
 
 	body, err := base64.URLEncoding.DecodeString(msg.Payload.Body.Data)
 	if err != nil {
@@ -182,12 +209,12 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 	}
 
 	emailInfo := EmailInfo{
-		Date:         date,
-		Subj:         headers[22].Value,
-		From:         headers[23].Value,
-		Body:         string(body),
-		Body_size:    msg.Payload.Body.Size,
-		attachmentID: msg.Payload.Body.AttachmentId,
+		Date:        time.Now(),
+		Subj:        headers[22].Value,
+		From:        headers[23].Value,
+		Body:        string(body),
+		Body_size:   msg.Payload.Body.Size,
+		attachments: attachementsLocations,
 	}
 
 	return emailInfo, nil
@@ -213,56 +240,54 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 // 		- I can check the database if that company has that particular sales person present.
 //		- this would need to be a seperate table to encode the information of the sales team at different locations.
 
-func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
+// func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
 
-	// var product ProductInfo
+// 	// var product ProductInfo
 
-	emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
-	if err != nil {
-		return false, err
-	}
+// 	emailAnalysisiPrompt, err := createReceiceEmailAnalysisPrompt("../email_parse_prompt.txt", emailInfo.Body)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	gptResp, err := promptGPT(emailAnalysisiPrompt)
-	if err != nil {
-		return false, err
-	}
+// 	gptResp, err := promptGPT(emailAnalysisiPrompt)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	// // Only continue with the insert if the stock is present
+// 	// // Only continue with the insert if the stock is present
 
-	emailProductInfo, err := parseGPTAnalysisResponse(gptResp)
-	if err != nil {
-		return false, err
-	}
+// 	emailProductInfo, err := parseGPTAnalysisResponse(gptResp)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	if !emailProductInfo.Present {
-		return false, err
-	}
+// 	if !emailProductInfo.Present {
+// 		return false, err
+// 	}
 
-	name, err := extractProductName(emailInfo.Subj)
-	if err != nil {
-		return false, err
-	}
+// 	name, err := extractProductName(emailInfo.Subj)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	fmt.Println(time.Now())
+// 	fmt.Println(time.Now())
 
-	//extract datasheet if needed
-	if emailProductInfo.Data_Sheet != false {
-		//do something to get the datasheet from the email
-	}
+// 	//extract datasheet if needed
+// 	if emailProductInfo.Data_Sheet != false {
+// 		//do something to get the datasheet from the email
+// 	}
 
-	product := ProductInfo{
-		Date:      time.Now(),
-		Name:      name,
-		Price:     emailProductInfo.Price,
-		Currency:  emailProductInfo.Currency,
-		DataSheet: emailProductInfo.Data_Sheet,
-	}
+// 	product := ProductInfo{
+// 		Date:      time.Now(),
+// 		Name:      name,
+// 		Price:     emailProductInfo.Price,
+// 		Currency:  emailProductInfo.Currency,
+// 		DataSheet: emailProductInfo.Data_Sheet,
+// 	}
 
-	//extract
+// 	return true, nil
 
-	return true, nil
-
-}
+// }
 
 func publish(w io.Writer, projectID, topicID, msg string) error {
 	projectID = "getconstructionmaterial"
@@ -338,6 +363,15 @@ func pushNotificationSetUp(srv *gmail.Service) (*gmail.WatchResponse, error) {
 
 }
 
-func getDataSheet(srv gmail.Service, datasheetID string) error {
+// func getDataSheet(srv gmail.Service, messageID string, attachmentID string) error {
+// 	attachment, err := srv.Users.Messages.Attachments.Get("me", messageID, attachmentID).Do()
+// 	if err != nil {
+// 		return err
+// 	}
 
-}
+// 	data, err := base64.URLEncoding.DecodeString(attachment.Data)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// }
