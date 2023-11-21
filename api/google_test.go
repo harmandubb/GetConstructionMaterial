@@ -62,3 +62,14 @@ func TestGetLatestUnreadMessage(t *testing.T) {
 	srv := ConnectToGmail()
 	getLatestUnreadMessage(srv)
 }
+
+func TestExtractProductName(t *testing.T) {
+	product, err := extractProductName("Subject: Docstruction: Fire Stop Collars - Got Any in Stock?")
+	if err != nil {
+		t.Fail()
+	}
+
+	if product != "Fire Stop Collars" {
+		t.Fail()
+	}
+}

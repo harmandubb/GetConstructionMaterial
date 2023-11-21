@@ -324,3 +324,17 @@ func gptAnalysisDataSheet(str string) bool {
 		return false
 	}
 }
+
+func extractProductName(str string) (string, error) {
+
+	// str = strings.ToLower(str)
+	re := regexp.MustCompile(`[Dd]ocstruction:\s*(.*?)\s*-`)
+	matches := re.FindStringSubmatch(str)
+
+	if len(matches) > 1 {
+		return matches[1], nil
+	} else {
+		return "", errors.New("no product name found")
+	}
+
+}

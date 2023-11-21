@@ -213,11 +213,6 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 //		- this would need to be a seperate table to encode the information of the sales team at different locations.
 
 func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
-	// //Extract the name of the product in questions
-	// first := strings.Index(emailInfo.Subj, ":")
-	// last := strings.Index(emailInfo.Subj, "-")
-
-	// productName := emailInfo.Subj[first+2 : last-2]
 
 	// var product ProductInfo
 
@@ -231,7 +226,6 @@ func parseEmailResponseInfo(emailInfo EmailInfo) (bool, error) {
 	// 	return false, err
 	// }
 
-	// //gpt response in the form of y,n,y (they stock the product, price is given, datasheet is provided)
 	// // Only continue with the insert if the stock is present
 
 	// respArray := strings.Split(gptResp, ",")
