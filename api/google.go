@@ -173,11 +173,42 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 
 	headers := msg.Payload.Headers // Check how the header structure looks like
 
+	var subj, from, currentHeader string
+	var body []byte
+	var bodySize int64
+
+	for i := range headers {
+		currentHeader = headers[i].Name
+
+		switch currentHeader {
+		case "Subject":
+			subj = headers[i].Value
+		// case "Date":
+		// 	date = headers[i].Value
+		case "From":
+			from = headers[i].Value
+		}
+	}
+
 	var attachementsLocations []string
 
 	for _, part := range msg.Payload.Parts {
+
+		if len(part.Body.Data) > 0 {
+			body, err = base64.URLEncoding.DecodeString(part.Body.Data)
+			bodySize = part.Body.Size
+			if err != nil {
+				fmt.Printf("No message body present: %s", err)
+			}
+
+		}
+
+		if err != nil {
+			fmt.Println("Error")
+		}
 		if part.Filename != "" && part.Body.AttachmentId != "" {
-			attachment, err := srv.Users.Messages.Attachments.Get("me", msgID, part.Body.AttachmentId).Do()
+
+			attachment, err := srv.Users.Messages.Attachments.Get(user, msgID, part.Body.AttachmentId).Do()
 			if err != nil {
 				return empty, err
 			}
@@ -194,26 +225,12 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 		}
 	}
 
-	// fmt.Println(headers[23].Value)
-	// // date, err := time.Parse("RFC1123", headers[16].Value)
-
-	// date, err := time.Parse("RFC1123Z", headers[23].Value)
-
-	// if err != nil {
-	// 	fmt.Printf("Time Parse Error: %s", err)
-	// }
-
-	body, err := base64.URLEncoding.DecodeString(msg.Payload.Body.Data)
-	if err != nil {
-		fmt.Printf("No message body present: %s", err)
-	}
-
 	emailInfo := EmailInfo{
 		Date:        time.Now(),
-		Subj:        headers[22].Value,
-		From:        headers[23].Value,
+		Subj:        subj,
+		From:        from,
 		Body:        string(body),
-		Body_size:   msg.Payload.Body.Size,
+		Body_size:   bodySize,
 		attachments: attachementsLocations,
 	}
 
