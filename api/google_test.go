@@ -61,6 +61,20 @@ func TestNewEmailReceive(t *testing.T) {
 func TestGetLatestUnreadMessage(t *testing.T) {
 	srv := ConnectToGmail()
 	getLatestUnreadMessage(srv)
+
+}
+
+func TestGetLatestUnreadMessageAndMarkRead(t *testing.T) {
+	srv := ConnectToGmail()
+	emailInfo, msgID, err := getLatestUnreadMessage(srv)
+	if err != nil {
+		t.Fail()
+	}
+
+	MarkEmailAsRead(srv, "me", msgID)
+
+	fmt.Println(emailInfo)
+
 }
 
 func TestExtractProductName(t *testing.T) {

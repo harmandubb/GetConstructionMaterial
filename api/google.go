@@ -103,7 +103,8 @@ func ConnectToGmail() *gmail.Service {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope)
+	// config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope)
+	config, err := google.ConfigFromJSON(b, gmail.GmailModifyScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -152,7 +153,7 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 
 }
 
-func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
+func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, string, error) {
 	user := "me"
 
 	queryString := fmt.Sprintf("In:inbox and Is:unread")
@@ -168,7 +169,7 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 
 	msg, err := srv.Users.Messages.Get(user, msgID).Do()
 	if err != nil {
-		return empty, err
+		return empty, "", err
 	}
 
 	headers := msg.Payload.Headers // Check how the header structure looks like
@@ -210,12 +211,12 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 
 			attachment, err := srv.Users.Messages.Attachments.Get(user, msgID, part.Body.AttachmentId).Do()
 			if err != nil {
-				return empty, err
+				return empty, "", err
 			}
 
 			data, err := base64.URLEncoding.DecodeString(attachment.Data)
 			if err != nil {
-				return empty, err
+				return empty, "", err
 			}
 
 			// Save the attachment
@@ -236,7 +237,7 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 		attachments: attachementsLocations,
 	}
 
-	return emailInfo, nil
+	return emailInfo, msgID, nil
 
 }
 
@@ -382,15 +383,16 @@ func pushNotificationSetUp(srv *gmail.Service) (*gmail.WatchResponse, error) {
 
 }
 
-// func getDataSheet(srv gmail.Service, messageID string, attachmentID string) error {
-// 	attachment, err := srv.Users.Messages.Attachments.Get("me", messageID, attachmentID).Do()
-// 	if err != nil {
-// 		return err
-// 	}
+func MarkEmailAsRead(srv *gmail.Service, userID string, messageID string) error {
+	// Create a ModifyMessageRequest to remove the UNREAD label
+	modReq := &gmail.ModifyMessageRequest{
+		RemoveLabelIds: []string{"UNREAD"},
+	}
 
-// 	data, err := base64.URLEncoding.DecodeString(attachment.Data)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// }
+	// Call the Gmail API to modify the message
+	_, err := srv.Users.Messages.Modify(userID, messageID, modReq).Do()
+	if err != nil {
+		return err
+	}
+	return nil
+}
