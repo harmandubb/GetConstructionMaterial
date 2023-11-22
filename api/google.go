@@ -219,9 +219,11 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, error) {
 			}
 
 			// Save the attachment
-			os.WriteFile(part.Filename, data, 0644)
-			fmt.Printf("Attachment %s downloaded.\n", part.Filename)
-			attachementsLocations = append(attachementsLocations, part.Filename)
+			attachmentLoc := fmt.Sprintf("Attachment/%s", part.Filename)
+			fmt.Println(attachmentLoc)
+			os.WriteFile(attachmentLoc, data, 0644)
+
+			attachementsLocations = append(attachementsLocations, attachmentLoc)
 		}
 	}
 
