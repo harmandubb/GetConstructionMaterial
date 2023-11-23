@@ -24,18 +24,14 @@ import (
 type Product struct {
 	ID            int
 	Name          string
+	Created       time.Time
 	Category      string
 	Picture       *uint32 // FUTURE: URLs to product images
 	PictureWidth  *uint
 	PictureHeight *uint
 	Data_Sheet    *uint32
 	Price         float64
-}
-
-type Date struct {
-	Year  int
-	Month time.Month
-	Day   int
+	Currency      string
 }
 
 func connectToDataBase(database string) *pgxpool.Pool {
@@ -89,9 +85,7 @@ func CheckDataBase(database string) string {
 	return tableName
 }
 
-func AddProductBasic(name string, category string, price float64) {
-	p := connectToDataBase("mynewdatabase")
-
+func AddProductBasic(name string, category string, price float64, p *pgxpool.Pool) {
 	tx, err := p.Begin(context.Background())
 	if err != nil {
 		log.Fatal(err)
@@ -123,6 +117,40 @@ func dataBaseRead(sqlString string) (pgx.Rows, error) {
 	return rows, nil
 }
 
+func readDataBaseRow(tableName string, productName string) (Product, error) {
+	var product Product
+	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE name = '%s'", tableName, productName)
+	rows, err := dataBaseRead(sqlString)
+	if err != nil {
+		return product, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+
+		err := rows.Scan(
+			&product.ID,
+			&product.Name,
+			&product.Created,
+			&product.Category,
+			&product.Picture,
+			&product.PictureWidth,
+			&product.PictureHeight,
+			&product.Data_Sheet,
+			&product.Price,
+			&product.Currency,
+		)
+
+		if err != nil {
+			return product, err
+		}
+	}
+
+	return product, nil
+
+}
+
 func dataBaseTransmit(sqlString string, database string, args ...any) error {
 	p := connectToDataBase(database)
 
@@ -145,8 +173,7 @@ func dataBaseTransmit(sqlString string, database string, args ...any) error {
 	return nil
 }
 
-func AddProductDataSheet(name string, pdfPath string, database string) (uint32, error) {
-	p := connectToDataBase(database)
+func AddProductDataSheet(name string, pdfPath string, database string, p *pgxpool.Pool) (uint32, error) {
 	tx, err := p.Begin(context.Background())
 	if err != nil {
 		return 0, err
@@ -199,6 +226,41 @@ func AddProductDataSheet(name string, pdfPath string, database string) (uint32, 
 	}
 
 	return oidVal, nil
+}
+
+func addProduct(pInfo ProductInfo) error {
+	//Can make the function more general for choosing different databases
+	p := connectToDataBase("mynewdatabase")
+
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback(context.Background())
+
+	//TODO: Can make the function more general for choosing differeint tables
+
+	sqlString := "INSERT INTO products (created, name, category, price, currency) VALUES($1, $2, $3, $4, $5)"
+
+	_, err = tx.Exec(context.Background(), sqlString, pInfo.Date, pInfo.Name, pInfo.Category, pInfo.Price, pInfo.Currency)
+	if err != nil {
+		return err
+	}
+
+	tx.Commit(context.Background())
+
+	//Now to upload the datasheet
+
+	//TODO Implement the function to upload and save multiple datasheets
+	if len(pInfo.DataSheet) >= 1 {
+		_, err = AddProductDataSheet(pInfo.Name, pInfo.DataSheet[0], "mynewdatabase", p)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getProductDataSheet(oidVal uint32, database string, outputPath string) error {

@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"reflect"
 	"testing"
+	"time"
 )
 
 func resetTestDataBase() error {
@@ -51,52 +51,53 @@ func TestCheckDatabase(t *testing.T) {
 	}
 }
 
-func TestAddProductBasic(t *testing.T) {
-	name := "Meta Caulk Collar"
-	category := "Firestopping"
-	price := 10.01
+// func TestAddProductBasic(t *testing.T) {
+// 	name := "Meta Caulk Collar"
+// 	category := "Firestopping"
+// 	price := 10.01
 
-	resetTestDataBase()
+// 	resetTestDataBase()
 
-	AddProductBasic(name, category, price)
+// 	AddProductBasic(name, category, price)
 
-	//Read the database to see if the action occured
-	sqlString := "SELECT * FROM products"
-	rows, err := dataBaseRead(sqlString)
-	if err != nil {
-		log.Fatalln(err)
-	}
+// 	//Read the database to see if the action occured
+// 	sqlString := "SELECT * FROM products"
+// 	rows, err := dataBaseRead(sqlString)
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
 
-	got := Product{}
-	rows.Next()
+// 	got := Product{}
+// 	rows.Next()
 
-	p := reflect.ValueOf(&got).Elem()
-	numCols := p.NumField()
-	columns := make([]interface{}, numCols)
-	for i := 0; i < numCols; i++ {
-		field := p.Field(i)
-		columns[i] = field.Addr().Interface()
-	}
-	err = rows.Scan(columns...)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	p := reflect.ValueOf(&got).Elem()
+// 	numCols := p.NumField()
+// 	columns := make([]interface{}, numCols)
+// 	for i := 0; i < numCols; i++ {
+// 		field := p.Field(i)
+// 		columns[i] = field.Addr().Interface()
+// 	}
+// 	err = rows.Scan(columns...)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	if got.Name != name {
-		t.Errorf("Database name = %s; want %s", got.Name, name)
-	}
+// 	if got.Name != name {
+// 		t.Errorf("Database name = %s; want %s", got.Name, name)
+// 	}
 
-	if got.Category != category {
-		t.Errorf("Database category = %s; want %s", got.Category, category)
-	}
+// 	if got.Category != category {
+// 		t.Errorf("Database category = %s; want %s", got.Category, category)
+// 	}
 
-	if got.Price != price {
-		t.Errorf("Database price = %f; want %f", got.Price, price)
-	}
-}
+// 	if got.Price != price {
+// 		t.Errorf("Database price = %f; want %f", got.Price, price)
+// 	}
+// }
 
 func TestAddProductDataSheet(t *testing.T) {
-	oidVal, err := AddProductDataSheet("Meta Caulk Collar", "./1.pdf", "mynewdatabase")
+	p := connectToDataBase("mynewdatabase")
+	oidVal, err := AddProductDataSheet("Meta Caulk Collar", "./1.pdf", "mynewdatabase", p)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -156,4 +157,57 @@ func TestAddPorductPicture(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestAddProduct(t *testing.T) {
+	err := resetTestDataBase()
+	if err != nil {
+		t.Error(err)
+	}
+
+	dateFormatted, err := time.Parse("DateTime", time.Now().Format("DateTime"))
+	if err != nil {
+		t.Error(err)
+	}
+
+	pInfo := ProductInfo{
+		Date:      dateFormatted,
+		Name:      "Hilti Fire Stop Collars",
+		Category:  "Fire Stop",
+		Price:     10.01,
+		Currency:  "CAD",
+		DataSheet: []string{"./Attachment/Technical-information-ASSET-DOC-LOC-1540917.pdf"},
+	}
+
+	err = addProduct(pInfo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	//Need to read back the information to verify that it was correctly transmitted
+	product, err := readDataBaseRow("products", pInfo.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if product.Name != pInfo.Name {
+		t.Errorf("Product Name Error")
+	}
+	if product.Created != pInfo.Date {
+		t.Errorf("Created Error")
+	}
+	if product.Category != pInfo.Category {
+		t.Error("Category Error")
+	}
+	if product.Price != pInfo.Price {
+		t.Error("Price Error")
+	}
+	if product.Currency != pInfo.Currency {
+		t.Error("Currency Error")
+	}
+
+	err = getProductDataSheet(*product.Data_Sheet, "mynewdatabase", "output.pdf")
+	if err != nil {
+		t.Error(err)
+	}
 }

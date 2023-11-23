@@ -33,10 +33,10 @@ type EmailInfo struct {
 type ProductInfo struct {
 	Date      time.Time
 	Name      string
-	Catergory string
+	Category  string
 	Price     float64
 	Currency  string
-	DataSheet string
+	DataSheet []string //multiple different types of datasheets can be added
 }
 
 // Retrieve a token, saves the token, then returns the generated client.

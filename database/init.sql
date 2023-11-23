@@ -10,12 +10,14 @@
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
+    created TIMESTAMP NOT NULL,
     category VARCHAR(100),
     picture OID,
     picture_w INT,
     picture_h INT,
     data_sheet OID,
-    price NUMERIC(10, 2)
+    price NUMERIC(10, 2),
+    currency VARCHAR(3)
 );
 
 -- Optional: Inserting some sample data
