@@ -1,8 +1,12 @@
 import Image from 'next/image'
 
+import NavBar from '../../components/nav'
+
 export default function LandingPage() {
   return (
+  
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-brand-bg">
+      <NavBar />
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
       </div>
 
