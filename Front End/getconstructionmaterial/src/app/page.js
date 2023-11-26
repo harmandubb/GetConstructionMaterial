@@ -16,7 +16,7 @@ export default function LandingPage() {
         <p>Sign up to be alerted when you can start searching!</p>
       </div>
 
-      <form method="post" class="bg-white p-4 flex justify-between items-center rounded-lg">
+      <form method="post" class="bg-logo-blue p-4 flex justify-between items-center rounded-lg">
           <input type="email" placeholder="E-mail Address" class="flex-grow mr-4 p-2 rounded placeholder-gray-500"></input>
           <button class="bg-brand-red-dark hover:bg-logo-red-light text-white font-bold py-2 px-4 rounded">
             Stay in the Loop
