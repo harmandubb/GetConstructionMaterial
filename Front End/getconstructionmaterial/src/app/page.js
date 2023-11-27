@@ -6,25 +6,29 @@ export default function LandingPage() {
   return (
 
 
-    <body className = "bg-brand-bg">
+    <body className = "w-full min-h-screen">
       <NavBar />
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      
-      <div className="font-mono px-4">
-        <h1 className="text-6xl">Looking for Construction Material?</h1>
-        <p className="py-4">Get Construction Material will provide you with an easy to search what material is avaialble near you and get the best price possible.</p>
-        <p>Sign up to be alerted when you can staxrt searching!</p>
-      </div>
+      <main className="flex flex-col items-center w-full pt-4 px-8">
 
-      <form method="post" className="bg-logo-blue p-4 flex justify-between items-center rounded-lg">
-          <input type="email" placeholder="E-mail Address" className="flex-grow mr-4 p-2 rounded placeholder-gray-500"></input>
-          <button class="bg-brand-red-dark hover:bg-logo-red-light text-white font-bold py-2 px-4 rounded">
-            Stay in the Loop
-          </button>
-      </form>
+        <div className="">
+          <div className="font-mono">
+            <h1 className="text-5xl sm:text-6xl">Looking for Construction Material?</h1>
+            <p className="">Get Construction Material will provide you with an easy way to search what material is avaialble near you and get the best price possible.</p>
+            <p>Sign up to be alerted when you can start searching!</p>
+          </div>
+
+          <form method="post" className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full sm:w-4/5 md:w-120 rounded-lg">
+              <input type="email" placeholder="E-mail Address" className="flex-grow rounded placeholder-gray-500"></input>
+              <button class="border-4 border-black hover:bg-brand-bg text-black rounded">
+                Stay in the Loop
+              </button>
+          </form>
+        </div>
+      
+        
 
       
-    </main>
+      </main>
     </body>
 
     

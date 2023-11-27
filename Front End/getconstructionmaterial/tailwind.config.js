@@ -13,6 +13,9 @@ module.exports = {
         'logo-red-dark': '#E5191C',
         'logo-red-light': '#FF3129',
       },
+      width: {
+        '120': '120px',
+      }, 
     },
   },
   plugins: [],
