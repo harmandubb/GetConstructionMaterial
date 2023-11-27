@@ -8,13 +8,13 @@ module.exports = {
   theme: {
     extend: {
       backgroundColor: {
-        'brand-bg': '#FFEA9C',
+        'brand': '#FFEA9C',
         'logo-blue': '#069AF0',
         'logo-red-dark': '#E5191C',
         'logo-red-lights': '#FF3129',
       },
       spacing: {
-        '120': '500px',
+        '120': '700px',
       }, 
     },
   },
