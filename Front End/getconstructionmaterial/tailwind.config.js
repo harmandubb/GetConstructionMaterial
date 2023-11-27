@@ -11,10 +11,10 @@ module.exports = {
         'brand-bg': '#FFEA9C',
         'logo-blue': '#069AF0',
         'logo-red-dark': '#E5191C',
-        'logo-red-light': '#FF3129',
+        'logo-red-lights': '#FF3129',
       },
-      width: {
-        '120': '120px',
+      spacing: {
+        '120': '400px',
       }, 
     },
   },
