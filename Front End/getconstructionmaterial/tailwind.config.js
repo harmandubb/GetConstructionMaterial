@@ -14,7 +14,7 @@ module.exports = {
         'logo-red-lights': '#FF3129',
       },
       spacing: {
-        '120': '400px',
+        '120': '500px',
       }, 
     },
   },
