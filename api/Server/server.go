@@ -11,9 +11,9 @@ func idle() {
 		w.Write([]byte("Hello, HTTPS!"))
 	})
 
-	err := http.ListenAndServeTLS(":443", "./Server/cert.pem", "./Server/key.pem", nil)
+	err := http.ListenAndServeTLS(":443", "cert.pem", "key.pem", nil)
 	if err != nil {
-		log.Fatal("Sever Error")
+		log.Fatalf("Sever Error: %v", err)
 	}
 
 }
