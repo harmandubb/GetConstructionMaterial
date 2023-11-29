@@ -38,7 +38,7 @@ func idle() {
 			log.Fatalf("Cannot convert data into struct: %v")
 		}
 
-		spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw"
+		spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
 
 		result := g.sendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
 

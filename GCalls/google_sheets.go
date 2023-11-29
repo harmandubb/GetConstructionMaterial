@@ -40,7 +40,6 @@ func appendEmailToSpreadSheet(srv *sheets.Service, id string, time time.Time, em
 	success := false
 
 	values := sheets.ValueRange{
-		MajorDimension: "ROWS",
 		Values: [][]interface{}{
 			{time, email},
 		},
