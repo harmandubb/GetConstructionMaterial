@@ -13,6 +13,10 @@ type EmailFormInfo struct {
 	Email string
 }
 
+type ServerResponse struct {
+	Success bool
+}
+
 func idle() {
 
 	// TODO: Implement the serveMUX
@@ -36,7 +40,21 @@ func idle() {
 
 		spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw"
 
-		api.sendEmailInfo(emailFormInfo, spreadsheetID)
+		result := g.sendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
+
+		resp := ServerResponse{
+			Success: result,
+		}
+
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatal("Was not able to encode struct to json")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json") //need to google http headers for all of the headers that can be used
+
+		w.Write(jsonResp)
 
 	})
 

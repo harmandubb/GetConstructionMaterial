@@ -1,18 +1,18 @@
-package api
+package gcalls
 
 import (
 	"context"
-	"docstruction/getconstructionmaterial/server"
 	"log"
 	"os"
+	"time"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
-func sendEmailInfo(emailFormInfo server.EmailFormInfo, spreadSheetID string) bool {
+func sendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 	srv := connectToSheetsAPI()
-	return appendToSpreadSheet(srv, spreadSheetID, emailFormInfo)
+	return appendEmailToSpreadSheet(srv, spreadSheetID, time, email)
 
 }
 
@@ -36,13 +36,13 @@ func connectToSheetsAPI() *sheets.Service {
 
 }
 
-func appendToSpreadSheet(srv *sheets.Service, id string, emaillFormInfo server.EmailFormInfo) bool {
+func appendEmailToSpreadSheet(srv *sheets.Service, id string, time time.Time, email string) bool {
 	success := false
 
 	values := sheets.ValueRange{
 		MajorDimension: "ROWS",
 		Values: [][]interface{}{
-			{emaillFormInfo.Time, emaillFormInfo.Email},
+			{time, email},
 		},
 	}
 
