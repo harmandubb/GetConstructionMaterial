@@ -15,6 +15,8 @@ type EmailFormInfo struct {
 
 func idle() {
 
+	// TODO: Implement the serveMUX
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, HTTPS!"))
 	})
@@ -31,6 +33,10 @@ func idle() {
 		if err != nil {
 			log.Fatalf("Cannot convert data into struct: %v")
 		}
+
+		spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw"
+
+		api.sendEmailInfo(emailFormInfo, spreadsheetID)
 
 	})
 
