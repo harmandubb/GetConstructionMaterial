@@ -1,7 +1,10 @@
 package main
 
-import gcalls "docstruction/getconstructionmaterial/GCalls"
+import (
+	_ "docstruction/getconstructionmaterial/GCalls"
+	server "docstruction/getconstructionmaterial/Server"
+)
 
 func main() {
-	gcalls.ConnectToSheetsAPI()
+	server.Idle()
 }

@@ -3,7 +3,7 @@ package server
 import "testing"
 
 func TestIdle(t *testing.T) {
-	idle()
+	Idle()
 }
 
 func TestClientTest(t *testing.T) {

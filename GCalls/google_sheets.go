@@ -11,7 +11,7 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-func sendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
+func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 	srv := ConnectToSheetsAPI()
 	return appendEmailToSpreadSheet(srv, spreadSheetID, time, email)
 

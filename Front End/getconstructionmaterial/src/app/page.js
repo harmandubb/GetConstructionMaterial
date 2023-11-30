@@ -1,6 +1,7 @@
 import Image from 'next/image'
 
 import NavBar from './components/nav'
+import EmailSubmission from './components/emailSubmission'
 
 export default function LandingPage() {
   return (
@@ -18,7 +19,7 @@ export default function LandingPage() {
             <p className="pb-4 sm:pt-0 pt-4">Sign up to be alerted when you can start searching!</p>
           </div>
 
-          
+          <EmailSubmission />
 
         </div>
       
