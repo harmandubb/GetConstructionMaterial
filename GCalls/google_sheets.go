@@ -6,28 +6,33 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
 func sendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
-	srv := connectToSheetsAPI()
+	srv := ConnectToSheetsAPI()
 	return appendEmailToSpreadSheet(srv, spreadSheetID, time, email)
 
 }
 
 // spreadsheet id: 1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw
 
-func connectToSheetsAPI() *sheets.Service {
+func ConnectToSheetsAPI() *sheets.Service {
 	ctx := context.Background()
-
 	b, err := os.ReadFile("../Auth2/credentials.json")
-
 	if err != nil {
 		log.Fatalf("Unable to read crednetials: %v", err)
 	}
 
-	srv, err := sheets.NewService(ctx, option.WithCredentialsJSON(b))
+	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets")
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+	client := getClient(config)
+
+	srv, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf("Unable to connnect to service %v", err)
 	}
@@ -45,12 +50,12 @@ func appendEmailToSpreadSheet(srv *sheets.Service, id string, time time.Time, em
 		},
 	}
 
-	resp, err := srv.Spreadsheets.Values.Append(id, "Sheet1!A1", &values).Do()
+	resp, err := srv.Spreadsheets.Values.Append(id, "Sheet1!A1", &values).ValueInputOption("USER_ENTERED").Do()
 	if err != nil {
 		log.Fatalf("Appending request Failed: %v", err)
 	}
 
-	if resp.Updates.ServerResponse.HTTPStatusCode == 200 {
+	if resp.ServerResponse.HTTPStatusCode == 200 {
 		success = true
 	}
 

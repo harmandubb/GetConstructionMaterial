@@ -1,9 +1,7 @@
 package main
 
-import (
-	"docstruction/getconstructionmaterial/api"
-)
+import gcalls "docstruction/getconstructionmaterial/GCalls"
 
 func main() {
-	api.ConnectToGmail()
+	gcalls.ConnectToSheetsAPI()
 }
