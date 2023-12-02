@@ -4,12 +4,22 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
+
+func getPath(relativePath string) string {
+	_, b, _, _ := runtime.Caller(0)
+	// The directory of the file
+	basepath := filepath.Dir(b)
+	// Construct the path relative to the file
+	return filepath.Join(basepath, relativePath)
+}
 
 func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 	srv := ConnectToSheetsAPI()
@@ -21,7 +31,7 @@ func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 
 func ConnectToSheetsAPI() *sheets.Service {
 	ctx := context.Background()
-	b, err := os.ReadFile("../Auth2/credentials.json")
+	b, err := os.ReadFile(getPath("../Auth2/credentials.json"))
 	if err != nil {
 		log.Fatalf("Unable to read crednetials: %v", err)
 	}

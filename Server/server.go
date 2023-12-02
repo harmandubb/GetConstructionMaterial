@@ -3,6 +3,7 @@ package server
 import (
 	g "docstruction/getconstructionmaterial/GCalls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -29,43 +30,82 @@ func getPath(relativePath string) string {
 }
 
 func Idle() {
+	fmt.Println("Starting Server")
 
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, HTTPS!"))
+		fmt.Println("I am in the default form branch")
+		// Set CORS headers for all responses
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Content-Type", "application/json")
+
+		// Handle OPTIONS for preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method == http.MethodPost {
+
+			w.Write([]byte("Hello, HTTPS!"))
+		}
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			log.Fatalf("Cannot read request body: %v", err)
+
+		// Set CORS headers for all responses
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+
+		// Handle OPTIONS for preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
 		}
 
-		var emailFormInfo EmailFormInfo
+		if r.Method == http.MethodPost {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Println("I am in the email form branch")
 
-		err = json.Unmarshal(body, &emailFormInfo)
-		if err != nil {
-			log.Fatalf("Cannot convert data into struct: %v", err)
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				log.Fatalf("Cannot read request body: %v", err)
+			}
+
+			var emailFormInfo EmailFormInfo
+
+			err = json.Unmarshal(body, &emailFormInfo)
+			if err != nil {
+				log.Fatalf("Cannot convert data into struct: %v", err)
+			}
+
+			spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
+
+			result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
+
+			resp := ServerResponse{
+				Success: result,
+			}
+
+			fmt.Println(resp.Success)
+
+			jsonResp, err := json.Marshal(resp)
+			if err != nil {
+				log.Fatal("Was not able to encode struct to json")
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			fmt.Println(jsonResp)
+
+			fmt.Println("Sending response")
+
+			w.Write(jsonResp)
 		}
-
-		spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
-
-		result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
-
-		resp := ServerResponse{
-			Success: result,
-		}
-
-		jsonResp, err := json.Marshal(resp)
-		if err != nil {
-			log.Fatal("Was not able to encode struct to json")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		w.Header().Set("Content-Type", "application/json") //need to google http headers for all of the headers that can be used
-
-		w.Write(jsonResp)
 
 	})
 

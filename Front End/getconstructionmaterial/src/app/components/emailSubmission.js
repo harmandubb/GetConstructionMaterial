@@ -1,6 +1,13 @@
+'use client'
+
 import React, {useState} from 'react';
 
+
+
+
 function EmailSubmission() {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
   const [formData, setFormData] = useState({
     email: ''
   });
@@ -14,15 +21,21 @@ function EmailSubmission() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('Submitting form data:', formData); // Log form data
     try {
-      const response = await fetch('http://localhost:443/emailForm', {
+      const response = await fetch('https://localhost:443/emailForm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       });
+
+      console.log('Response:', response); // Log response
       if (response.ok) {
+        const responseBody = await response.json();
+        console.log('Response Body:', responseBody);
         console.log('Form submitted successfully');
       } else {
         console.error('Form submission failed');
@@ -30,7 +43,8 @@ function EmailSubmission() {
     } catch (error) {
       console.error('Error submitting form', error);
     }
-  };
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:w-[600px]">
