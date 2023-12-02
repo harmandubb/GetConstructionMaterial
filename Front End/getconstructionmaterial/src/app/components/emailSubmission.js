@@ -23,6 +23,7 @@ function EmailSubmission() {
     e.preventDefault();
 
     console.log('Submitting form data:', formData); // Log form data
+    if (formData.email != "") {
     try {
       const response = await fetch('https://localhost:443/emailForm', {
         method: 'POST',
@@ -43,6 +44,7 @@ function EmailSubmission() {
     } catch (error) {
       console.error('Error submitting form', error);
     }
+  }
 };
 
 
