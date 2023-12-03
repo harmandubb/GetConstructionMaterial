@@ -8,9 +8,13 @@ import React, {useState} from 'react';
 function EmailSubmission() {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-  const [formData, setFormData] = useState({
-    email: ''
+  const [formData, setFormData] = useState('');
+
+  const [messageStatus, setMessageStatus] = useState({
+    errorMessage: '',
+    success: false  
   });
+
 
   const handleChange = (e) => {
     setFormData({
@@ -25,7 +29,7 @@ function EmailSubmission() {
     console.log('Submitting form data:', formData); // Log form data
     if (formData.email != "") {
     try {
-      const response = await fetch('https://localhost:443/emailForm', {
+      const response = await fetch('https://localhost:443/emailForm', { //Change for production
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -36,26 +40,39 @@ function EmailSubmission() {
       console.log('Response:', response); // Log response
       if (response.ok) {
         const responseBody = await response.json();
-        console.log('Response Body:', responseBody);
-        console.log('Form submitted successfully');
+        // console.log('Response Body:', responseBody);
+        setMessageStatus({message: "", success: true})
+        // console.log('Form submitted successfully');
       } else {
+        console.log("IN error visual handle")
+        setErrors(data.error)
         console.error('Form submission failed');
       }
     } catch (error) {
-      console.error('Error submitting form', error);
+      setMessageStatus({message: "Network Error: Please try again shortly", success: false})
+      console.log("Printing Errors:", error.message);
+
     }
   }
 };
 
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:w-[600px]">
+    <div className="flex flex-col sm:w-[600px]">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row">
         <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="E-mail Address" className="sm:flex items-stretch flex-grow focus:outline-none block rounded-lg sm:rounded-none sm:rounded-l-lg pl-4 py-2"></input>
         
         <button type="submit" className="sm:mt-0 sm:w-auto sm:-ml-2 py-2 px-2 rounded-lg font-medium text-white focus:outline-none bg-logo-blue">
         Stay in the Loop
         </button>
+        
     </form>
+      {messageStatus.message && <div className="border-2 rounded border-red-700 bg-red-300 py-2 px-2 mt-1">
+        {messageStatus.message}</div>}
+      {messageStatus.success && <div className="border-2 rounded border-green-700 bg-green-300 py-2 px-2 mt-1">
+        Congrats! You have signed up. Stay Tuned!</div>}
+    </div>
+   
   );
 }
 
