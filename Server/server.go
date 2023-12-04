@@ -65,6 +65,9 @@ func Idle() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
+
+		responseText := "Hello, you are in the main"
+		w.Write([]byte(responseText)) // Convert string to []byte
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
