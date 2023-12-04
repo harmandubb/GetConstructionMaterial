@@ -43,6 +43,7 @@ func Idle() {
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("in the main")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
@@ -104,7 +105,8 @@ func Idle() {
 
 	})
 
-	err := http.ListenAndServeTLS(":443", getPath("cert.pem"), getPath("key.pem"), nil)
+	// err := http.ListenAndServeTLS(":443", getPath("cert.pem"), getPath("key.pem"), nil)
+	err := http.ListenAndServe(":443", nil)
 	if err != nil {
 		log.Fatalf("Sever Error: %v", err)
 	}
