@@ -29,11 +29,22 @@ func getPath(relativePath string) string {
 	return filepath.Join(basepath, relativePath)
 }
 
-func setCORS(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "https://www.getconstructionmaterial.com") // Adjust in production
+func setCORS(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+
+	// List of allowed origins
+	allowedOrigins := map[string]bool{
+		"https://www.docstruction.com":            true,
+		"https://www.getconstructionmaterial.com": true,
+	}
+
+	// Check if the origin is in the list of allowed origins
+	if _, ok := allowedOrigins[origin]; ok {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	}
+
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-	w.Header().Set("Content-Type", "application/json")
 
 }
 
@@ -43,7 +54,13 @@ func Idle() {
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w)
+		setCORS(w, r)
+
+		// Handle OPTIONS for preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		fmt.Println("in the main")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -51,14 +68,21 @@ func Idle() {
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w)
+		setCORS(w, r)
+
+		// Handle OPTIONS for preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w)
+		setCORS(w, r)
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {
@@ -72,14 +96,16 @@ func Idle() {
 
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
-				log.Fatalf("Cannot read request body: %v", err)
+				w.WriteHeader(http.StatusExpectationFailed)
+				return
 			}
 
 			var emailFormInfo EmailFormInfo
 
 			err = json.Unmarshal(body, &emailFormInfo)
 			if err != nil {
-				log.Fatalf("Cannot convert data into struct: %v", err)
+				w.WriteHeader(http.StatusExpectationFailed)
+				return
 			}
 
 			spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
@@ -94,7 +120,7 @@ func Idle() {
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
-				log.Fatal("Was not able to encode struct to json")
+				w.WriteHeader(http.StatusExpectationFailed)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
