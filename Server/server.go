@@ -29,37 +29,32 @@ func getPath(relativePath string) string {
 	return filepath.Join(basepath, relativePath)
 }
 
+func setCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+	w.Header().Set("Content-Type", "application/json")
+
+}
+
 func Idle() {
 	fmt.Println("Starting Server")
 
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("I am in the default form branch")
-		// Set CORS headers for all responses
-		w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
 
-		// Handle OPTIONS for preflight
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if r.Method == http.MethodPost {
-
-			w.Write([]byte("Hello, HTTPS!"))
-		}
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
-
-		// Set CORS headers for all responses
-		w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {
