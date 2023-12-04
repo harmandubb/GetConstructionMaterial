@@ -30,7 +30,7 @@ func getPath(relativePath string) string {
 }
 
 func setCORS(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // Adjust in production
+	w.Header().Set("Access-Control-Allow-Origin", "https://www.getconstructionmaterial.com") // Adjust in production
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 	w.Header().Set("Content-Type", "application/json")
@@ -43,6 +43,7 @@ func Idle() {
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		setCORS(w)
 		fmt.Println("in the main")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -50,12 +51,14 @@ func Idle() {
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		setCORS(w)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
+		setCORS(w)
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {
