@@ -30,18 +30,19 @@ func getPath(relativePath string) string {
 }
 
 func setCORS(w http.ResponseWriter, r *http.Request) {
-	origin := r.Header.Get("Origin")
+	// origin := r.Header.Get("Origin")
 
-	// List of allowed origins
-	allowedOrigins := map[string]bool{
-		"https://www.docstruction.com":            true,
-		"https://www.getconstructionmaterial.com": true,
-	}
+	// // List of allowed origins
+	// allowedOrigins := map[string]bool{
+	// 	"https://www.docstruction.com":            true,
+	// 	"https://www.getconstructionmaterial.com": true,
+	// }
 
-	// Check if the origin is in the list of allowed origins
-	if _, ok := allowedOrigins[origin]; ok {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-	}
+	// // Check if the origin is in the list of allowed origins
+	// if _, ok := allowedOrigins[origin]; ok {
+	// 	w.Header().Set("Access-Control-Allow-Origin", origin)
+	// }
+	w.Header().Set("Access-Control-Allow-Origin", "https://www.getconstructionmaterial.com")
 
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
@@ -54,6 +55,7 @@ func Idle() {
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("You are visiting the foot backend")
 		setCORS(w, r)
 
 		// Handle OPTIONS for preflight
