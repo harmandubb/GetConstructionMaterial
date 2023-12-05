@@ -61,16 +61,14 @@ func Idle() {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
-		} else {
-			log.Println("Request received:", r.Method, r.URL.Path)
-
-			w.Header().Set("Content-Type", "application/json")
-
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, "OK")
-
-			return
 		}
+		log.Println("Request received:", r.Method, r.URL.Path)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
