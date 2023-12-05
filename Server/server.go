@@ -62,14 +62,19 @@ func Idle() {
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
-		}
-		fmt.Println("in the main")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
+		} else {
+			log.Println("Request received:", r.Method, r.URL.Path)
 
-		responseText := "Hello, you are in the main"
-		w.Write([]byte(responseText)) // Convert string to []byte
+			w.Header().Set("Content-Type", "application/json")
+
+			responseText := "Hello, you are in the main"
+
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(responseText))
+
+			return
+		}
+
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
