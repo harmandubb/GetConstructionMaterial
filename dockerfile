@@ -31,7 +31,7 @@ COPY ./API ./API
 # # Copy the binary from the builder stage
 # COPY --from=builder /app/myapp .
 
-EXPOSE 443
+# EXPOSE 8080
 
 # Run the binary
 CMD ["go", "run", "main.go"]
