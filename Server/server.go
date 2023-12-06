@@ -42,7 +42,7 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 	// if _, ok := allowedOrigins[origin]; ok {
 	// 	w.Header().Set("Access-Control-Allow-Origin", origin)
 	// }
-	w.Header().Set("Access-Control-Allow-Origin", "https://www.getconstructionmaterial.com")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
