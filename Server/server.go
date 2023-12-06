@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func idle() {
+func Idle() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Health check request received")
 
