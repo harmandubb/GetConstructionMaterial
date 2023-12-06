@@ -63,10 +63,9 @@ func Idle() {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		fmt.Println("in the main")
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
+
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
 
 		responseText := "Hello, you are in the main"
 		w.Write([]byte(responseText)) // Convert string to []byte
@@ -82,7 +81,7 @@ func Idle() {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
 	})
