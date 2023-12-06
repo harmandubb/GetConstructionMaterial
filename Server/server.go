@@ -65,21 +65,13 @@ func Idle() {
 		}
 
 		w.Header().Set("Content-Type", "text/plain")
+
+		// Write an HTTP 200 OK status
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
 
-	})
+		// Send a response body, which can be a simple message
+		w.Write([]byte("Service is up and running"))
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w, r)
-
-		// Handle OPTIONS for preflight
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
