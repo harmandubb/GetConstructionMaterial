@@ -55,7 +55,7 @@ func Idle() {
 	// TODO: Implement the serveMUX
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("You are visiting the foot backend")
+		log.Println("Root Request")
 		setCORS(w, r)
 
 		// Handle OPTIONS for preflight
@@ -63,12 +63,10 @@ func Idle() {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+
 		w.Header().Set("Content-Type", "text/plain")
-
 		w.WriteHeader(http.StatusOK)
-
-		responseText := "Hello, you are in the main"
-		w.Write([]byte(responseText)) // Convert string to []byte
+		w.Write([]byte("OK"))
 
 	})
 
@@ -81,9 +79,7 @@ func Idle() {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
