@@ -29,7 +29,7 @@ function EmailSubmission() {
     console.log('Submitting form data:', formData); // Log form data
     if (formData.email != "") {
     try {
-      const response = await fetch('https://lobster-app-6hasq.ondigitalocean.app/emailForm', { //Change for production
+      const response = await fetch('https://oyster-app-62tux.ondigitalocean.app//emailForm', { //Change for production
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
