@@ -8,7 +8,7 @@ import React, {useState} from 'react';
 function EmailSubmission() {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-  const [formData, setFormData] = useState('');
+  const [formData, setFormData] = useState({email: ''});
 
   const [messageStatus, setMessageStatus] = useState({
     errorMessage: '',
@@ -17,19 +17,24 @@ function EmailSubmission() {
 
 
   const handleChange = (e) => {
+    console.log("Change is Occuring")
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+
+    console.log("formdata:", formData.email)
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+
+
     console.log('Submitting form data:', formData); // Log form data
     if (formData.email != "") {
     try {
-      const response = await fetch('https://api.getconstructionmaterial.com/emailFrom', { //Change for production
+      const response = await fetch('https://api.getconstructionmaterial.com/emailForm', { //Change for production
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
