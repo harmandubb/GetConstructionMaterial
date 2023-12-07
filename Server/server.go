@@ -61,6 +61,9 @@ func Idle() {
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		log.Println("Request origin:", origin)
+
 		setCORS(w, r)
 
 		// Handle OPTIONS for preflight
