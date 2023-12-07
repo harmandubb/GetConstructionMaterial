@@ -114,8 +114,9 @@ func Idle() {
 	})
 
 	log.Println("Server is starting on port 8080...")
-	// err := http.ListenAndServe("0.0.0.0:8080", nil)
-	err := http.ListenAndServeTLS("0.0.0.0:8080", getPath("cert.pem"), getPath("key.pem"), nil)
+	err := http.ListenAndServe("0.0.0.0:8080", nil)
+	// err := http.ListenAndServeTLS("0.0.0.0:8080", getPath("cert.pem"), getPath("key.pem"), nil)
+	// err := http.ListenAndServeTLS("0.0.0.0:8080", "cert.pem", "key.pem", nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

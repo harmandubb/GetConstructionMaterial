@@ -31,7 +31,12 @@ WORKDIR /root/
 # # Copy the binary from the builder stage
 COPY --from=builder /app/myapp .
 
+# COPY ./Server/cert.pem ./cert.pem
+# COPY ./Server/key.pem ./key.pem
+
 EXPOSE 8080
 
 # Run the binary
 CMD ["./myapp"]
+
+# CMD ["go", "run", "main.go"]
