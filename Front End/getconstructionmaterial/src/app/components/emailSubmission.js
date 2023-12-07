@@ -45,7 +45,7 @@ function EmailSubmission() {
         // console.log('Form submitted successfully');
       } else {
         console.log("IN error visual handle")
-        setErrors(data.error)
+        setMessageStatus({message:data.error, success:false})
         console.error('Form submission failed');
       }
     } catch (error) {

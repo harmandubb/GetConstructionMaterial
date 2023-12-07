@@ -36,6 +36,8 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 	allowedOrigins := map[string]bool{
 		"https://www.docstruction.com":            true,
 		"https://www.getconstructionmaterial.com": true,
+		"https://docstruction.com":                true,
+		"https://getconstructionmaterial.com":     true,
 	}
 
 	if _, ok := allowedOrigins[origin]; ok {
