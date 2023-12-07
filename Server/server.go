@@ -40,7 +40,12 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 		"https://getconstructionmaterial.com":     true,
 	}
 
-	fmt.Println(origin)
+	fmt.Println("Origin Request:", origin)
+	fmt.Println("Server present:", allowedOrigins[origin])
+
+	_, ok := allowedOrigins[origin]
+
+	fmt.Print("OK:", ok)
 
 	if _, ok := allowedOrigins[origin]; ok {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
@@ -63,8 +68,6 @@ func Idle() {
 	})
 
 	http.HandleFunc("/emailForm", func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-		log.Println("Request origin:", origin)
 
 		setCORS(w, r)
 
