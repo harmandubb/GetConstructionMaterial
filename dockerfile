@@ -22,16 +22,16 @@ COPY ./Auth2 ./Auth2
 COPY ./API ./API
 
 # # Build the Go app
-# RUN CGO_ENABLED=0 GOOS=linux go build -o myapp
+RUN CGO_ENABLED=0 GOOS=linux go build -o myapp
 
 # # Start a new stage from scratch for a smaller final image
-# FROM ubuntu:latest  
-# WORKDIR /root/
+FROM ubuntu:latest  
+WORKDIR /root/
 
 # # Copy the binary from the builder stage
-# COPY --from=builder /app/myapp .
+COPY --from=builder /app/myapp .
 
 EXPOSE 8080
 
 # Run the binary
-CMD ["go", "run", "main.go"]
+CMD ["./myapp"]
