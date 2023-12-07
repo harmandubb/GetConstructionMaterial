@@ -50,7 +50,7 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 
 func Idle() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w, r)
+		// setCORS(w, r)
 		log.Println("Health check request received")
 
 		// Write an HTTP 200 OK status
