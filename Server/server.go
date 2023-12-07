@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -17,6 +19,14 @@ type EmailFormInfo struct {
 
 type ServerResponse struct {
 	Success bool
+}
+
+func getPath(relativePath string) string {
+	_, b, _, _ := runtime.Caller(0)
+	// The directory of the file
+	basepath := filepath.Dir(b)
+	// Construct the path relative to the file
+	return filepath.Join(basepath, relativePath)
 }
 
 func setCORS(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +114,8 @@ func Idle() {
 	})
 
 	log.Println("Server is starting on port 8080...")
-	err := http.ListenAndServe("0.0.0.0:8080", nil)
+	// err := http.ListenAndServe("0.0.0.0:8080", nil)
+	err := http.ListenAndServeTLS(":8080", getPath("cert.pem"), getPath("key.pem"), nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
