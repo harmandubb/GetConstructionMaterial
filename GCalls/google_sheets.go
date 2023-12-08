@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"time"
 
-	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
@@ -31,16 +31,38 @@ func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 
 func ConnectToSheetsAPI() *sheets.Service {
 	ctx := context.Background()
-	b, err := os.ReadFile(getPath("../Auth2/credentials.json"))
-	if err != nil {
-		log.Fatalf("Unable to read crednetials: %v", err)
+	// b, err := os.ReadFile(getPath("../Auth2/credentials.json"))
+	// if err != nil {
+	// 	log.Fatalf("Unable to read crednetials: %v", err)
+	// }
+
+	endpoint := oauth2.Endpoint{
+		AuthURL:       "https://accounts.google.com/o/oauth2/auth",
+		DeviceAuthURL: "",
+		TokenURL:      "https://oauth2.googleapis.com/token",
+		AuthStyle:     0,
 	}
 
-	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets")
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	//For testing I would need to load enviro vairbales from a file
+
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
+
+	config := oauth2.Config{
+		ClientID:     os.Getenv("Client_ID"),
+		ClientSecret: os.Getenv("Client_Secret"),
+		Endpoint:     endpoint,
+		RedirectURL:  os.Getenv("Redirect_URL"),
+		Scopes:       []string{"https://www.googleapis.com/auth/spreadsheets"},
 	}
-	client := getClient(config)
+
+	// config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets")
+	// if err != nil {
+	// 	log.Fatalf("Unable to parse client secret file to config: %v", err)
+	// }
+	client := getClient(&config)
 
 	srv, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
