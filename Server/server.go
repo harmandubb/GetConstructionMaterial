@@ -84,6 +84,7 @@ func Idle() {
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusExpectationFailed)
+				fmt.Println(err)
 				return
 			}
 
@@ -92,6 +93,7 @@ func Idle() {
 			err = json.Unmarshal(body, &emailFormInfo)
 			if err != nil {
 				w.WriteHeader(http.StatusExpectationFailed)
+				fmt.Println(err)
 				return
 			}
 
@@ -109,6 +111,7 @@ func Idle() {
 			if err != nil {
 				w.WriteHeader(http.StatusExpectationFailed)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				fmt.Println(err)
 				return
 			}
 
