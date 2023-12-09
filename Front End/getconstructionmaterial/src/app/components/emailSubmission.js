@@ -17,13 +17,13 @@ function EmailSubmission() {
 
 
   const handleChange = (e) => {
-    console.log("Change is Occuring")
+    // console.log("Change is Occuring")
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
 
-    console.log("formdata:", formData.email)
+    // console.log("formdata:", formData.email)
   };
 
   const handleSubmit = async (e) => {
@@ -48,7 +48,7 @@ function EmailSubmission() {
         // console.log('Response Body:', responseBody);
         setMessageStatus({message: "", success: true})
         // console.log('Form submitted successfully');
-        setFormData({ email: '' });
+        setFormData({ email: '' , success: false});
       } else {
         console.log("IN error visual handle")
         setMessageStatus({message:data.error, success:false})
