@@ -26,6 +26,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o myapp
 
 # # Start a new stage from scratch for a smaller final image
 FROM ubuntu:latest  
+
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+
 WORKDIR /root/
 
 # # Copy the binary from the builder stage
