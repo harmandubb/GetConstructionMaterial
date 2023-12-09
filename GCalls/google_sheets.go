@@ -65,6 +65,7 @@ func ConnectToSheetsAPI() *sheets.Service {
 	srv, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf("Unable to connnect to service %v", err)
+		fmt.Println("Error after service", err)
 	}
 
 	return srv
