@@ -2,6 +2,7 @@ package gcalls
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -53,6 +54,11 @@ func ConnectToSheetsAPI() *sheets.Service {
 		},
 		TokenURL: os.Getenv("TOKEN_URL"),
 	}
+
+	fmt.Println(conf)
+
+	fmt.Println("CLIENT_EMAIL:", os.Getenv("CLIENT_EMAIL"))
+	fmt.Println("PRIVATE_KET_ID:", os.Getenv("PRIVATE_KEY_ID"))
 
 	client := conf.Client(ctx)
 
