@@ -48,6 +48,7 @@ function EmailSubmission() {
         // console.log('Response Body:', responseBody);
         setMessageStatus({message: "", success: true})
         // console.log('Form submitted successfully');
+        setFormData({ email: '' });
       } else {
         console.log("IN error visual handle")
         setMessageStatus({message:data.error, success:false})
