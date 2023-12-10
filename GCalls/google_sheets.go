@@ -28,6 +28,8 @@ func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 
 }
 
+func AppendDataToSpreadSheet(speadSheetID string)
+
 // spreadsheet id: 1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw
 
 func ConnectToSheetsAPI() *sheets.Service {

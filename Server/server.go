@@ -17,6 +17,12 @@ type EmailFormInfo struct {
 	Email string
 }
 
+type MaterialFormInfo struct {
+	Time     time.Time
+	Email    string
+	Material string
+}
+
 type ServerResponse struct {
 	Success bool
 }
@@ -79,7 +85,6 @@ func Idle() {
 
 		if r.Method == http.MethodPost {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Println("I am in the email form branch")
 
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
@@ -121,6 +126,57 @@ func Idle() {
 
 	})
 
+	http.HandleFunc("/materialForm", func(w http.ResponseWriter, r *http.Request) {
+		setCORS(w, r)
+
+		// Handle OPTIONS for preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method == http.MethodPost {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Println("I am in the material form branch")
+
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusExpectationFailed)
+				return
+			}
+
+			var materialFormInfo MaterialFormInfo
+
+			err = json.Unmarshal(body, &materialFormInfo)
+			if err != nil {
+				w.WriteHeader(http.StatusExpectationFailed)
+				return
+			}
+
+			spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better. //Need to have the spread sheet id for the material form
+
+			result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
+
+			resp := ServerResponse{
+				Success: result,
+			}
+
+			fmt.Println(resp.Success)
+
+			jsonResp, err := json.Marshal(resp)
+			if err != nil {
+				w.WriteHeader(http.StatusExpectationFailed)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			fmt.Println(jsonResp)
+
+			fmt.Println("Sending response")
+
+			w.Write(jsonResp)
+		}
+	})
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe("0.0.0.0:8080", nil)
 	// err := http.ListenAndServeTLS("0.0.0.0:8080", getPath("cert.pem"), getPath("key.pem"), nil)

@@ -30,7 +30,7 @@ const ProductSubmissionComponent: React.FC = () => {
 
     if (formData.email != "") {
       try {
-        const response = await fetch('https://api.getconstructionmaterial.com/emailForm', { //Change for production
+        const response = await fetch('https://api.getconstructionmaterial.com/materialForm', { //Change for production
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
