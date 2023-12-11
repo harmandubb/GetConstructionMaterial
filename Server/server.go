@@ -17,12 +17,6 @@ type EmailFormInfo struct {
 	Email string
 }
 
-type MaterialFormInfo struct {
-	Time     time.Time
-	Email    string
-	Material string
-}
-
 type ServerResponse struct {
 	Success bool
 }
@@ -145,7 +139,7 @@ func Idle() {
 				return
 			}
 
-			var materialFormInfo MaterialFormInfo
+			var materialFormInfo g.MaterialFormInfo
 
 			err = json.Unmarshal(body, &materialFormInfo)
 			if err != nil {
@@ -153,9 +147,9 @@ func Idle() {
 				return
 			}
 
-			spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better. //Need to have the spread sheet id for the material form
+			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8" //could make the storing of the id better. //Need to have the spread sheet id for the material form
 
-			result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
+			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
 
 			resp := ServerResponse{
 				Success: result,

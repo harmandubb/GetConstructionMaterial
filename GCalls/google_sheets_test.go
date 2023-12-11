@@ -12,3 +12,16 @@ func TestPublis(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestMaterialFormPublish(t *testing.T) {
+	matInfo := MaterialFormInfo{
+		Email:    "harmandubb@docstruction.com",
+		Material: "Fire Stopping Collars",
+	}
+
+	success := SendMaterialFormInfo("1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8", matInfo)
+
+	if !success {
+		t.Fail()
+	}
+}

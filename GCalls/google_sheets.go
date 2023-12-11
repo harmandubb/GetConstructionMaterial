@@ -9,10 +9,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
+
+type MaterialFormInfo struct {
+	Email    string
+	Material string
+}
 
 func getPath(relativePath string) string {
 	_, b, _, _ := runtime.Caller(0)
@@ -28,17 +34,50 @@ func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 
 }
 
-func AppendDataToSpreadSheet(speadSheetID string)
+func SendMaterialFormInfo(spreadSheetID string, materialFormInfo MaterialFormInfo) bool {
+	return AppendDataToSpreadSheet(spreadSheetID, time.Now(), materialFormInfo.Email, materialFormInfo.Material)
+}
+
+func AppendDataToSpreadSheet(spreadSheetID string, time time.Time, vals ...string) bool {
+	success := false
+	srv := ConnectToSheetsAPI()
+
+	// Prepare the data for the ValueRange
+	var data []interface{}
+
+	data = append(data, time)
+	for _, val := range vals {
+		data = append(data, val)
+	}
+
+	values := sheets.ValueRange{
+		Values: [][]interface{}{
+			data,
+		},
+	}
+
+	resp, err := srv.Spreadsheets.Values.Append(spreadSheetID, "Sheet1!A1", &values).ValueInputOption("USER_ENTERED").Do()
+	if err != nil {
+		log.Fatalf("Appending request Failed: %v", err)
+	}
+
+	if resp.ServerResponse.HTTPStatusCode == 200 {
+		success = true
+	}
+
+	return success
+
+}
 
 // spreadsheet id: 1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw
 
 func ConnectToSheetsAPI() *sheets.Service {
 	ctx := context.Background()
 
-	// err := godotenv.Load() // This will load your .env file
-	// if err != nil {
-	// 	log.Fatalf("Error loading .env file: %v", err)
-	// }
+	err := godotenv.Load() // This will load your .env file
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 	key := os.Getenv("PRIVATE_KEY")
 
 	newkey := strings.Replace(key, "\\n", "\n", -1)
