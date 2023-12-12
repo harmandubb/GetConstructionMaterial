@@ -54,9 +54,9 @@ func SearchSuppliers(c *maps.Client, category string, loc *maps.LatLng) (maps.Pl
 
 	// fmt.Println(nearByResp)
 	// fmt.Println(nearByResp.Results)
-	for _, val := range nearByResp.Results {
-		fmt.Println(val)
-	}
+	// for _, val := range nearByResp.Results {
+	// 	fmt.Println(val)
+	// }
 
 	return nearByResp, nil
 
@@ -65,7 +65,7 @@ func SearchSuppliers(c *maps.Client, category string, loc *maps.LatLng) (maps.Pl
 func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (SupplierInfo, error) {
 	ctx := context.Background()
 
-	id := placeResult.ID
+	id := placeResult.PlaceID
 
 	detailsReq := maps.PlaceDetailsRequest{
 		PlaceID:  id,
@@ -81,10 +81,18 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 		return SupplierInfo{}, err
 	}
 
+	var address string
+
+	if placeResult.FormattedAddress != "" {
+		address = placeResult.FormattedAddress
+	} else {
+		address = placeResult.Vicinity
+	}
+
 	supInfo := SupplierInfo{
 		ID:      id,
 		Name:    placeResult.Name,
-		Address: placeResult.FormattedAddress,
+		Address: address,
 		Location: maps.LatLng{
 			Lat: placeDetailsResp.Geometry.Location.Lat,
 			Lng: placeDetailsResp.Geometry.Location.Lng,
