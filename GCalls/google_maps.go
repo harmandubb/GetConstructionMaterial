@@ -3,7 +3,6 @@ package gcalls
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -18,18 +17,23 @@ type SupplierInfo struct {
 	Website  string
 }
 
-func searchSuppliers(category string, loc *maps.LatLng) (maps.PlacesSearchResponse, error) {
-	empty := maps.PlacesSearchResponse{}
-
+func GetMapsClient() (*maps.Client, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return empty, err
+		return &maps.Client{}, err
 	}
 
 	c, err := maps.NewClient(maps.WithAPIKey(os.Getenv("TESTING_MAPS_KEY")))
 	if err != nil {
-		log.Fatalf("fatal error: %s", err)
+		return &maps.Client{}, err
 	}
+
+	return c, nil
+
+}
+
+func SearchSuppliers(c *maps.Client, category string, loc *maps.LatLng) (maps.PlacesSearchResponse, error) {
+	empty := maps.PlacesSearchResponse{}
 
 	ctx := context.Background()
 
@@ -58,7 +62,7 @@ func searchSuppliers(category string, loc *maps.LatLng) (maps.PlacesSearchRespon
 
 }
 
-func getSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (SupplierInfo, error) {
+func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (SupplierInfo, error) {
 	ctx := context.Background()
 
 	id := placeResult.ID

@@ -1,19 +1,50 @@
 package gcalls
 
 import (
+	"fmt"
 	"testing"
 
 	"googlemaps.github.io/maps"
 )
 
-func TestMakeSearchNearByRequest(t *testing.T) {
+func TestSearchSuppliers(t *testing.T) {
 	loc := maps.LatLng{
 		Lat: 49.05812,
 		Lng: -122.81026,
 	}
 
-	err := connectToMaps("Electrical", &loc)
+	c, err := GetMapsClient()
 	if err != nil {
 		t.Error(err)
 	}
+
+	_, err = SearchSuppliers(c, "Electrical", &loc)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGetSupplierInfo(t *testing.T) {
+	loc := maps.LatLng{
+		Lat: 49.05812,
+		Lng: -122.81026,
+	}
+
+	c, err := GetMapsClient()
+	if err != nil {
+		t.Error(err)
+	}
+
+	supplierResponse, err := SearchSuppliers(c, "Electrical", &loc)
+	if err != nil {
+		t.Error(err)
+	}
+
+	supplierInfo, err := GetSupplierInfo(c, supplierResponse.Results[0])
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(supplierInfo)
+
 }
