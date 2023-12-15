@@ -26,7 +26,7 @@ func TestFindContactURLOnPage(t *testing.T) {
 }
 
 func TestFindContactFormInputs(t *testing.T) {
-	formInputs, err := FindContactFormInputs("https://www.gescan.com/contact")
+	formInputs, err := FindContactFormInputs("https://ortechindustries.ca/contact")
 	if err != nil {
 		t.Error(err)
 	}

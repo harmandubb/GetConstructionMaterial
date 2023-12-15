@@ -116,18 +116,57 @@ func FindContactURLOnPage(page string) ([]string, error) {
 	return contactLinks, nil
 }
 
-func FindContactFormInputs(page string) ([]string, error) {
+type FormDetails struct {
+	InputFields []InputFieldDetails
+	SubmitID    string
+}
+
+type InputFieldDetails struct {
+	name string
+	id   string
+}
+
+func FindContactFormInputs(page string) (FormDetails, error) {
 	c := colly.NewCollector()
 
-	var formIDs []string
+	formDetails := FormDetails{
+		SubmitID: "",
+	}
 
-	c.OnHTML(".form", func(e *colly.HTMLElement) {
-		fmt.Println("Found an element with class 'form'")
-		// You can perform various actions with the element here
-		// For example, print the element's HTML
-		// fmt.Println(e.DOM.Html())
-		elemString, _ := e.DOM.Html()
-		formIDs = append(formIDs, elemString)
+	c.OnHTML("main form", func(e *colly.HTMLElement) {
+
+		e.ForEach("input", func(_ int, el *colly.HTMLElement) {
+			if el.Attr("type") == "submit" {
+				formDetails.SubmitID = el.Attr("id")
+
+			} else {
+				formDetails.InputFields = append(formDetails.InputFields,
+					InputFieldDetails{
+						name: el.Attr("name"),
+						id:   el.Attr("id"),
+					})
+			}
+		})
+
+		e.ForEach("textarea", func(_ int, el *colly.HTMLElement) {
+
+			formDetails.InputFields = append(formDetails.InputFields,
+				InputFieldDetails{
+					name: el.Attr("name"),
+					id:   el.Attr("id"),
+				})
+
+		})
+
+		if formDetails.SubmitID == "" {
+			e.ForEach("button", func(_ int, el *colly.HTMLElement) {
+				if el.Attr("type") == "submit" {
+					formDetails.SubmitID = el.Attr("id")
+				}
+			})
+
+		}
+
 	})
 
 	// Handle visiting the page
@@ -141,6 +180,6 @@ func FindContactFormInputs(page string) ([]string, error) {
 		log.Fatal(err)
 	}
 
-	return formIDs, nil
+	return formDetails, nil
 
 }
