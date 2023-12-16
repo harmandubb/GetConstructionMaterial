@@ -66,12 +66,12 @@ func ConnectToGmailAPI() *gmail.Service {
 // error if any present
 func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error) {
 	message, err := gmail.NewUsersMessagesService(srv).Send(
-		"me",
+		"harmandubb@docstruction.com",
 		prepMessage(subj, msg, to),
 	).Do()
 
 	if err != nil {
-		return &gmail.Message{}, err
+		return message, err
 	}
 
 	return message, nil
