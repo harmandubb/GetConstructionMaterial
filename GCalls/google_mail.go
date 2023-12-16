@@ -90,7 +90,7 @@ func prepMessage(subj, msg, to string) *gmail.Message {
 	header := make(map[string]string)
 	header["To"] = to
 	header["Subject"] = subj
-	header["Content-Type"] = "text/plain: charset=utf-8"
+	header["Content-Type"] = "text/plain; charset=utf-8"
 
 	var headers []*gmail.MessagePartHeader
 	for k, v := range header {
