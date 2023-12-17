@@ -45,6 +45,8 @@ func ConnectToGmailAPI() *gmail.Service {
 		TokenURL: os.Getenv("TOKEN_URL"),
 	}
 
+	conf.Subject = "harmandubb@docstruction.com"
+
 	client := conf.Client(ctx)
 
 	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
@@ -91,6 +93,7 @@ func prepMessage(subj, msg, to string) *gmail.Message {
 	header["To"] = to
 	header["Subject"] = subj
 	header["Content-Type"] = "text/plain; charset=utf-8"
+	header["Date"] = time.Now().Format(time.RFC1123Z)
 
 	var headers []*gmail.MessagePartHeader
 	for k, v := range header {
@@ -106,9 +109,31 @@ func prepMessage(subj, msg, to string) *gmail.Message {
 
 	message := gmail.Message{
 		Payload: messagePart,
+		Raw:     rawMessage(msg, header),
 	}
 
 	return &message
+}
+
+// Purpose: Create a raw message for the send of the gmail function becuase that is the only thing that is needed
+// Parameters:
+// msg string --> message body
+// headers map[string]string --> contains the needed headers for the send transmission (to, Subject, Content-type)
+// Return:
+// raw string --> RFC 2822 format and base64url encoded string 2
+func rawMessage(msg string, headers map[string]string) string {
+	fullString := ""
+	for key, value := range headers {
+		fullString = fullString + fmt.Sprintf("%s: %s\r\n", key, value)
+	}
+
+	fullString = fullString + "\r\n" + msg
+
+	// Convert the RFC822 formatted message to a base64URL encoded string
+	base64RawMessage := base64.URLEncoding.EncodeToString([]byte(fullString))
+
+	return base64RawMessage
+
 }
 
 // Purpose: test function to test the publish subscription functionality in good api for push notifcation testing
