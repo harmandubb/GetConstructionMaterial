@@ -15,6 +15,7 @@ type SupplierInfo struct {
 	Address  string
 	Location maps.LatLng
 	Website  string
+	Email    []string
 }
 
 func GetMapsClient() (*maps.Client, error) {
@@ -31,6 +32,15 @@ func GetMapsClient() (*maps.Client, error) {
 	return c, nil
 
 }
+
+// Purpose: get the near by suppliers based on the category that is identified for the material
+// Parameters:
+// c *maps.Client --> client that is etablish the api service for
+// category string --> Supplier category to fine
+// loc *maps.LatLng --> lat and longintue infromation to define the place you are finding suppliers near
+// Return:
+// resp maps.PlaceSearchResponse --> returns the respons from the maps api, would need to get details
+// error if present.
 
 func SearchSuppliers(c *maps.Client, category string, loc *maps.LatLng) (maps.PlacesSearchResponse, error) {
 	empty := maps.PlacesSearchResponse{}

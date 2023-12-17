@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"googlemaps.github.io/maps"
 )
 
 type EmailFormInfo struct {
@@ -155,7 +157,51 @@ func Idle() {
 				Success: result,
 			}
 
-			fmt.Println(resp.Success)
+			//Call chat gpt to catigorized the item
+			catigorizationTemplate := "./material_catigorization_prompt.txt"
+
+			catergory, err := PromptGPTMaterialCatogorization(catigorizationTemplate, materialFormInfo.Material)
+			if err != nil {
+				log.Fatalf("Catogirization Error: %v", err)
+			}
+
+			// Search for near by supplies for the category
+			c, err := g.GetMapsClient()
+			if err != nil {
+				log.Fatalf("Map Client Connection Error: %v", err)
+			}
+
+			//TODO: get the location data from the user using the site
+
+			loc := maps.LatLng{
+				Lat: 49.05812,
+				Lng: -122.81026,
+			}
+
+			searchResp, err := g.SearchSuppliers(c, catergory, &loc)
+			if err != nil {
+				log.Fatalf("Map Search Supplier Error: %v", err)
+			}
+
+			var supplierInfo []g.SupplierInfo
+
+			for _, supplier := range searchResp.Results {
+				supplier, _ := g.GetSupplierInfo(c, supplier)
+
+				supplierInfo = append(supplierInfo, supplier)
+			}
+
+			//Get the supplier emails from the info that is found
+
+			for _, supInfo := range supplierInfo {
+				email, err := FindSupplierContactEmail(supInfo.Website)
+				if err != nil {
+					log.Fatalf("Supplier Email Get Error: %v", err)
+					break
+				}
+
+				supInfo.Email = email
+			}
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {

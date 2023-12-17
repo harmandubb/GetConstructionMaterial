@@ -25,11 +25,11 @@ func TestFindContactURLOnPage(t *testing.T) {
 	fmt.Println(contactLinks)
 }
 
-func TestFindContactFormInputs(t *testing.T) {
-	formInputs, err := FindContactFormInputs("https://ortechindustries.ca/contact")
-	if err != nil {
-		t.Error(err)
-	}
+// func TestFindContactFormInputs(t *testing.T) {
+// 	formInputs, err := FindContactFormInputs("https://ortechindustries.ca/contact")
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	fmt.Println(formInputs)
-}
+// 	fmt.Println(formInputs)
+// }

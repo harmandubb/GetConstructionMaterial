@@ -1,21 +1,17 @@
 package server
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestPromptGPTMaterialCategorization(t *testing.T) {
-	prompt, err := CreateMaterialCategorizationPrompt("./material_catigorization_prompt.txt", "Fire Stopping Collars")
+	category, err := PromptGPTMaterialCatogorization("./material_catigorization_prompt.txt", "bx 4 connector wire")
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
-	resp, err := promptGPT(prompt)
-	if err != nil {
+	if category != "Electrical" {
 		t.Fail()
 	}
-
-	fmt.Println(resp)
 
 }

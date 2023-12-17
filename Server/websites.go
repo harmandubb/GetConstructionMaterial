@@ -14,12 +14,12 @@ import (
 func FindEmailsOnPage(page string) ([]string, error) {
 	c := colly.NewCollector()
 
-	var mailtoLinks []string
+	var emails []string
 
 	// OnHTML callback for mailto links
 	c.OnHTML("a[href^='mailto:']:not(header a[href^='mailto:'])", func(e *colly.HTMLElement) {
 		mailtoLink := e.Attr("href")
-		mailtoLinks = append(mailtoLinks, mailtoLink)
+		emails = append(emails, mailtoLink)
 	})
 
 	// OnHTML callback for specific elements
@@ -40,7 +40,7 @@ func FindEmailsOnPage(page string) ([]string, error) {
 		// Iterate over nodes and check if they contain 'email'
 		for _, n := range nodes {
 			if strings.Contains(strings.ToLower(n.Data), "email") {
-				mailtoLinks = append(mailtoLinks, extractEmailFromString(n.Data))
+				emails = append(emails, extractEmailFromString(n.Data))
 				// fmt.Printf("Text: %s\n", n.Data)
 			}
 		}
@@ -54,10 +54,10 @@ func FindEmailsOnPage(page string) ([]string, error) {
 	// Start scraping
 	err := c.Visit(page) // Replace with the URL you want to scrape
 	if err != nil {
-		return mailtoLinks, err
+		return emails, err
 	}
 
-	return mailtoLinks, nil
+	return emails, nil
 
 }
 
@@ -116,6 +116,40 @@ func FindContactURLOnPage(page string) ([]string, error) {
 	return contactLinks, nil
 }
 
+func FindSupplierContactEmail(page string) ([]string, error) {
+	email, err := FindEmailsOnPage(page)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(email) != 0 {
+		return email, nil
+	}
+
+	contactURLs, err := FindContactURLOnPage(page)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(contactURLs) == 0 {
+		return nil, nil
+	}
+
+	for _, contactUrl := range contactURLs {
+		email, err = FindEmailsOnPage(contactUrl)
+		if err != nil {
+			return nil, err
+		}
+		if len(email) != 0 {
+			return email, nil
+		}
+
+	}
+
+	return nil, nil
+
+}
+
 type FormDetails struct {
 	InputFields []InputFieldDetails
 	SubmitID    string
@@ -126,60 +160,60 @@ type InputFieldDetails struct {
 	id   string
 }
 
-func FindContactFormInputs(page string) (FormDetails, error) {
-	c := colly.NewCollector()
+// func FindContactFormInputs(page string) (FormDetails, error) {
+// 	c := colly.NewCollector()
 
-	formDetails := FormDetails{
-		SubmitID: "",
-	}
+// 	formDetails := FormDetails{
+// 		SubmitID: "",
+// 	}
 
-	c.OnHTML("main form", func(e *colly.HTMLElement) {
+// 	c.OnHTML("main form", func(e *colly.HTMLElement) {
 
-		e.ForEach("input", func(_ int, el *colly.HTMLElement) {
-			if el.Attr("type") == "submit" {
-				formDetails.SubmitID = el.Attr("id")
+// 		e.ForEach("input", func(_ int, el *colly.HTMLElement) {
+// 			if el.Attr("type") == "submit" {
+// 				formDetails.SubmitID = el.Attr("id")
 
-			} else {
-				formDetails.InputFields = append(formDetails.InputFields,
-					InputFieldDetails{
-						name: el.Attr("name"),
-						id:   el.Attr("id"),
-					})
-			}
-		})
+// 			} else {
+// 				formDetails.InputFields = append(formDetails.InputFields,
+// 					InputFieldDetails{
+// 						name: el.Attr("name"),
+// 						id:   el.Attr("id"),
+// 					})
+// 			}
+// 		})
 
-		e.ForEach("textarea", func(_ int, el *colly.HTMLElement) {
+// 		e.ForEach("textarea", func(_ int, el *colly.HTMLElement) {
 
-			formDetails.InputFields = append(formDetails.InputFields,
-				InputFieldDetails{
-					name: el.Attr("name"),
-					id:   el.Attr("id"),
-				})
+// 			formDetails.InputFields = append(formDetails.InputFields,
+// 				InputFieldDetails{
+// 					name: el.Attr("name"),
+// 					id:   el.Attr("id"),
+// 				})
 
-		})
+// 		})
 
-		if formDetails.SubmitID == "" {
-			e.ForEach("button", func(_ int, el *colly.HTMLElement) {
-				if el.Attr("type") == "submit" {
-					formDetails.SubmitID = el.Attr("id")
-				}
-			})
+// 		if formDetails.SubmitID == "" {
+// 			e.ForEach("button", func(_ int, el *colly.HTMLElement) {
+// 				if el.Attr("type") == "submit" {
+// 					formDetails.SubmitID = el.Attr("id")
+// 				}
+// 			})
 
-		}
+// 		}
 
-	})
+// 	})
 
-	// Handle visiting the page
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL.String())
-	})
+// 	// Handle visiting the page
+// 	c.OnRequest(func(r *colly.Request) {
+// 		fmt.Println("Visiting", r.URL.String())
+// 	})
 
-	// Start scraping
-	err := c.Visit(page) // Replace with the URL you want to scrape
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	// Start scraping
+// 	err := c.Visit(page) // Replace with the URL you want to scrape
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	return formDetails, nil
+// 	return formDetails, nil
 
-}
+// }
