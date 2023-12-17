@@ -23,6 +23,8 @@ type ServerResponse struct {
 	Success bool
 }
 
+const SUPPLIERCONTACTLIMIT = 3
+
 func getPath(relativePath string) string {
 	_, b, _, _ := runtime.Caller(0)
 	// The directory of the file
@@ -201,6 +203,28 @@ func Idle() {
 				}
 
 				supInfo.Email = email
+			}
+
+			counter := 0
+
+			srv := g.ConnectToGmailAPI()
+
+			for _, supInfo := range supplierInfo {
+				if counter < SUPPLIERCONTACTLIMIT {
+					if len(supInfo.Email) != 0 {
+						// get the email prompt from chat gpt
+						subj, body, err := CreateEmailToSupplier("../email_prompt.txt", supInfo.Name, materialFormInfo.Material)
+						if err != nil {
+							log.Fatalf("GPT Email Create Error: %v", err)
+						}
+
+						// send the emal to the supplier
+						g.SendEmail(srv, subj, body, supInfo.Email[0])
+						counter = counter + 1
+					}
+				} else {
+					break
+				}
 			}
 
 			jsonResp, err := json.Marshal(resp)
