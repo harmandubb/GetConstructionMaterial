@@ -19,7 +19,8 @@ func FindEmailsOnPage(page string) ([]string, error) {
 	// OnHTML callback for mailto links
 	c.OnHTML("a[href^='mailto:']:not(header a[href^='mailto:'])", func(e *colly.HTMLElement) {
 		mailtoLink := e.Attr("href")
-		emails = append(emails, mailtoLink)
+		emails = append(emails, strings.TrimPrefix(mailtoLink, "mailto:"))
+		// emails = append(emails, mailtoLink)
 	})
 
 	// OnHTML callback for specific elements

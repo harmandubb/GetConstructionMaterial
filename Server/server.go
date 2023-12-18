@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
-
-	"googlemaps.github.io/maps"
 )
 
 type EmailFormInfo struct {
@@ -162,12 +160,7 @@ func Idle() {
 			catigorizationTemplate := "../material_catigorization_prompt.txt"
 			emailTemplate := "../email_prompt.txt"
 
-			loc := maps.LatLng{
-				Lat: 49.05812,
-				Lng: -122.81026,
-			}
-
-			err = ContactSupplierForMaterial(materialFormInfo, catigorizationTemplate, emailTemplate, &loc)
+			err = ContactSupplierForMaterial(materialFormInfo, catigorizationTemplate, emailTemplate)
 			if err != nil {
 				log.Fatalf("Error when Sending Supplier Emails: %v", err)
 			}
@@ -203,7 +196,7 @@ func Idle() {
 // loc *mapts.LatLng --> Google maps struct for holding the llat and lng for the place the user is requesting from.
 // Return:
 // error if any present
-func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string, loc *maps.LatLng) error {
+func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) error {
 	//Call chat gpt to catigorized the item
 
 	catergory, err := PromptGPTMaterialCatogorization(catigorizationTemplate, matInfo.Material)

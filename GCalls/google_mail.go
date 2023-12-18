@@ -76,6 +76,8 @@ func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error)
 		return message, err
 	}
 
+	fmt.Println("Sent Email to: %s", to)
+
 	return message, nil
 
 }
