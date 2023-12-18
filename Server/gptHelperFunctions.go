@@ -2,10 +2,13 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
@@ -144,10 +147,13 @@ func PromptGPTMaterialCatogorization(promptTemplatePath string, material string)
 }
 
 func CreateEmailToSupplier(promptTemplatePath string, supplier string, material string) (string, string, error) {
-	emailMaterialRequestPrompt := createEmailMaterialRequestPrompt(promptTemplatePath, "", supplier, material)
+	emailMaterialRequestPrompt, err := createEmailMaterialRequestPrompt(promptTemplatePath, "", supplier, material)
+	if err != nil {
+		return "", "", err
+	}
 
 	gptEmailStructure, err := promptGPT(emailMaterialRequestPrompt)
-	if err != nil{
+	if err != nil {
 		return "", "", err
 	}
 
@@ -156,9 +162,8 @@ func CreateEmailToSupplier(promptTemplatePath string, supplier string, material 
 		return "", "", err
 	}
 
-	return subj, body, nil 
+	return subj, body, nil
 }
-
 
 func createEmailMaterialRequestPrompt(promptTemplatePath string, salesPersonName string, companyName string, product string) (string, error) {
 	file, err := os.Open(promptTemplatePath)
@@ -222,34 +227,34 @@ func parseGPTEmailResponse(gptResponse string) (string, string, error) {
 
 }
 
-func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
-	// // if present is avialable then we will continue the struct
-	var emailProductInfo EmailProductInfo
+// func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
+// 	// // if present is avialable then we will continue the struct
+// 	var emailProductInfo EmailProductInfo
 
-	gptResponse = strings.ToLower(gptResponse)
+// 	gptResponse = strings.ToLower(gptResponse)
 
-	present := gptAnalysisPresent(gptResponse)
+// 	present := gptAnalysisPresent(gptResponse)
 
-	emailProductInfo.Present = present
+// 	emailProductInfo.Present = present
 
-	if !present {
-		emailProductInfo.Currency = ""
-		emailProductInfo.Data_Sheet = false
-		emailProductInfo.Price = 0
+// 	if !present {
+// 		emailProductInfo.Currency = ""
+// 		emailProductInfo.Data_Sheet = false
+// 		emailProductInfo.Price = 0
 
-		return emailProductInfo, nil
-	}
+// 		return emailProductInfo, nil
+// 	}
 
-	price, currency := gptAnalysisPrice(gptResponse)
-	emailProductInfo.Price = price
-	emailProductInfo.Currency = currency
+// 	price, currency := gptAnalysisPrice(gptResponse)
+// 	emailProductInfo.Price = price
+// 	emailProductInfo.Currency = currency
 
-	datasheet := gptAnalysisDataSheet(gptResponse)
-	emailProductInfo.Data_Sheet = datasheet
+// 	datasheet := gptAnalysisDataSheet(gptResponse)
+// 	emailProductInfo.Data_Sheet = datasheet
 
-	return emailProductInfo, nil
+// 	return emailProductInfo, nil
 
-}
+// }
 
 func gptAnalysisPresent(str string) bool {
 
@@ -344,3 +349,4 @@ func extractProductName(str string) (string, error) {
 	} else {
 		return "", errors.New("no product name found")
 	}
+}

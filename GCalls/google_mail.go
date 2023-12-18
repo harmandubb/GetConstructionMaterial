@@ -45,7 +45,7 @@ func ConnectToGmailAPI() *gmail.Service {
 		TokenURL: os.Getenv("TOKEN_URL"),
 	}
 
-	conf.Subject = "harmandubb@docstruction.com"
+	conf.Subject = "info@docstruction.com"
 
 	client := conf.Client(ctx)
 
@@ -68,7 +68,7 @@ func ConnectToGmailAPI() *gmail.Service {
 // error if any present
 func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error) {
 	message, err := gmail.NewUsersMessagesService(srv).Send(
-		"harmandubb@docstruction.com",
+		"info@docstruction.com",
 		prepMessage(subj, msg, to),
 	).Do()
 
