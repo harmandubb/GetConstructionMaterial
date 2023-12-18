@@ -219,8 +219,14 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 		return err
 	}
 
-	//TODO: get the location data from the user using the site
-	searchResp, err := g.SearchSuppliers(c, catergory, loc)
+	//Get Lat and lng coordinates
+	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Location)
+	if err != nil {
+		log.Fatalf("Geocoding Converstion Error: %v", err)
+		return err
+	}
+
+	searchResp, err := g.SearchSuppliers(c, catergory, &geometry.Location)
 	if err != nil {
 		log.Fatalf("Map Search Supplier Error: %v", err)
 		return err
