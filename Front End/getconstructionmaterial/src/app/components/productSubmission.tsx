@@ -5,6 +5,7 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 interface FormData {
     material: string;
     email: string;
+    loc: string; 
 }
 
 interface MessageStatus {
@@ -17,7 +18,7 @@ interface ErrorResponse {
 }
 
 const ProductSubmissionComponent: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({email: '', material: ''});
+  const [formData, setFormData] = useState<FormData>({email: '', material: '', loc: ''});
   const [messageStatus, setMessageStatus] = useState<MessageStatus>({});
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -58,11 +59,11 @@ const ProductSubmissionComponent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col sm:w-[900px]">
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row">
-      <input type="search" name="material" value={formData.material} onChange={handleChange} placeholder="Material/Product wanted" className="sm:flex items-stretch flex-grow sm:border-r border-b-2 sm:border-b-0 focus:outline-none block rounded-lg sm:rounded-none sm:rounded-l-lg pl-4 py-2"></input>
-        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="E-mail Address" className="sm:flex items-stretch flex-grow focus:outline-none rounded-lg sm:rounded-none block pl-4 py-2"></input>
-        
+    <div className="flex flex-col lg:w-[1000px]">
+      <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row">
+      <input type="search" name="material" value={formData.material} onChange={handleChange} placeholder="Material/Product wanted" className="sm:flex items-stretch flex-grow lg:border-r border-b-2 lg:border-b-0 focus:outline-none block rounded-lg lg:rounded-none lg:rounded-l-lg pl-4 py-2"></input>
+      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="E-mail Address" className="sm:flex items-stretch flex-grow sm:border-r border-b-2 lg:border-b-0 focus:outline-none block rounded-lg lg:rounded-none pl-4 py-2"></input>
+      <input type="search" name="loc" value={formData.loc} onChange={handleChange} placeholder="City and Province" className="sm:flex items-stretch flex-grow focus:outline-none rounded-lg lg:rounded-none block pl-4 py-2"></input>  
 
         <button type="submit" className="sm:mt-0 sm:w-auto sm:-ml-2 py-2 px-2 rounded-lg font-medium text-white focus:outline-none bg-logo-blue">
             Find Material

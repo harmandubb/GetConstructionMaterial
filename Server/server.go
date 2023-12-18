@@ -258,15 +258,17 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 		if counter < SUPPLIERCONTACTLIMIT {
 			if len(supInfo.Email) != 0 {
 				// get the email prompt from chat gpt
-				subj, body, err := CreateEmailToSupplier(emailTemplate, supInfo.Name, matInfo.Material)
-				if err != nil {
-					log.Fatalf("GPT Email Create Error: %v", err)
-					return err
-				}
+				if IsValidEmail(supInfo.Email[0]) {
+					subj, body, err := CreateEmailToSupplier(emailTemplate, supInfo.Name, matInfo.Material)
+					if err != nil {
+						log.Fatalf("GPT Email Create Error: %v", err)
+						return err
+					}
 
-				// send the emal to the supplier
-				g.SendEmail(srv, subj, body, supInfo.Email[0])
-				counter = counter + 1
+					// send the emal to the supplier
+					g.SendEmail(srv, subj, body, supInfo.Email[0])
+					counter = counter + 1
+				}
 			}
 		} else {
 			break

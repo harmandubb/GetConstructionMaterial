@@ -61,6 +61,16 @@ func FindEmailsOnPage(page string) ([]string, error) {
 
 }
 
+// PUrpose: Check if a string is a valid email
+// Parameter:
+// email string --> email string you are trying to verify to be an email
+// Return:
+// restuls
+func IsValidEmail(email string) (result bool) {
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	return emailRegex.MatchString(email)
+}
+
 func extractEmailFromString(str string) string {
 	// Regular expression for matching an email address
 	re := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
