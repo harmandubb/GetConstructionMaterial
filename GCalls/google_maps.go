@@ -112,3 +112,19 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 
 	return supInfo, nil
 }
+
+func GeocodeGeneralLocation(c *maps.Client, loc string) (maps.AddressGeometry, error) {
+	ctx := context.Background()
+
+	geoReq := maps.GeocodingRequest{
+		Address: loc,
+	}
+
+	geoResp, err := c.Geocode(ctx, &geoReq)
+	if err != nil {
+		return maps.AddressGeometry{}, err
+	}
+
+	return geoResp[0].Geometry, nil
+
+}

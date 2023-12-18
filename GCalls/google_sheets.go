@@ -18,6 +18,7 @@ import (
 type MaterialFormInfo struct {
 	Email    string
 	Material string
+	Location string
 }
 
 func getPath(relativePath string) string {
@@ -35,7 +36,7 @@ func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 }
 
 func SendMaterialFormInfo(spreadSheetID string, materialFormInfo MaterialFormInfo) bool {
-	return AppendDataToSpreadSheet(spreadSheetID, time.Now(), materialFormInfo.Email, materialFormInfo.Material)
+	return AppendDataToSpreadSheet(spreadSheetID, time.Now(), materialFormInfo.Email, materialFormInfo.Material, materialFormInfo.Location)
 }
 
 func AppendDataToSpreadSheet(spreadSheetID string, time time.Time, vals ...string) bool {

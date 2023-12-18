@@ -51,3 +51,17 @@ func TestGetSupplierInfo(t *testing.T) {
 	fmt.Println(supplierInfo.Website)
 
 }
+
+func TestGeocdeGeneralLocation(t *testing.T) {
+	c, err := GetMapsClient()
+	if err != nil {
+		t.Error(err)
+	}
+
+	result, err := GeocodeGeneralLocation(c, "Surrey BC")
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(result)
+}
