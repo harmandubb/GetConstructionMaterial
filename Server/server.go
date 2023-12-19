@@ -206,6 +206,13 @@ func Idle() {
 func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) error {
 	//Call chat gpt to catigorized the item
 
+	fmt.Printf("Inputted material form info:")
+	fmt.Println(matInfo)
+
+	fmt.Println(matInfo.Email)
+	fmt.Println(matInfo.Location)
+	fmt.Println(matInfo.Material)
+
 	catergory, err := PromptGPTMaterialCatogorization(catigorizationTemplate, matInfo.Material)
 	if err != nil {
 		log.Fatalf("Catogirization Error: %v", err)
