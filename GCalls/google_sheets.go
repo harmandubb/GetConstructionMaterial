@@ -18,7 +18,7 @@ import (
 type MaterialFormInfo struct {
 	Email    string
 	Material string
-	Location string
+	Loc      string
 }
 
 func getPath(relativePath string) string {

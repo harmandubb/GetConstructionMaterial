@@ -23,13 +23,20 @@ const ProductSubmissionComponent: React.FC = () => {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
+    console.log(formData)
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    console.log("In Submit formData:", formData)
+
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; //Should remove if not testing locally. 
     event.preventDefault();
 
+    console.log("In Submit formData:", formData)
+
     if (formData.email != "") {
+      console.log("In Submit formData:", formData)
+      console.log("Stringifyied JSON:", JSON.stringify(formData))
       try {
         const response = await fetch('https://api.getconstructionmaterial.com/materialForm', { //Change for production
           method: 'POST',
@@ -38,6 +45,8 @@ const ProductSubmissionComponent: React.FC = () => {
           },
           body: JSON.stringify(formData)
         });
+
+
   
         console.log('Response:', response); // Log response
         if (response.ok) {
