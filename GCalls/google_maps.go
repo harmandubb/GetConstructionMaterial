@@ -113,6 +113,7 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 }
 
 func GeocodeGeneralLocation(c *maps.Client, loc string) (maps.AddressGeometry, error) {
+	fmt.Printf("Location String inputed: %s\n", loc)
 	ctx := context.Background()
 
 	geoReq := maps.GeocodingRequest{

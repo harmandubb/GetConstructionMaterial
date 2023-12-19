@@ -16,14 +16,18 @@ interface ErrorResponse {
 }
 
 const EmailSubmissionComponent: React.FC = () => {
+  
   const [formData, setFormData] = useState<FormData>({email: ''});
   const [messageStatus, setMessageStatus] = useState<MessageStatus>({});
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.value)
     setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    console.log("Handling Submit")
+    console.log(formData)
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; //Should remove if not testing locally. 
     event.preventDefault();
 

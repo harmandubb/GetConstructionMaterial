@@ -107,7 +107,7 @@ func promptGPT(prompt string) (string, error) {
 		},
 	)
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		fmt.Printf("Chat Completion error: %v\n", err)
 		return "", err
 	}
 
