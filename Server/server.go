@@ -210,7 +210,7 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 	fmt.Println(matInfo)
 
 	fmt.Println(matInfo.Email)
-	fmt.Println(matInfo.Location)
+	fmt.Println(matInfo.Loc)
 	fmt.Println(matInfo.Material)
 
 	catergory, err := PromptGPTMaterialCatogorization(catigorizationTemplate, matInfo.Material)
@@ -227,7 +227,7 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 	}
 
 	//Get Lat and lng coordinates
-	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Location)
+	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Loc)
 	if err != nil {
 		log.Fatalf("Geocoding Converstion Error: %v", err)
 		return err

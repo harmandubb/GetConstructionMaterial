@@ -36,7 +36,7 @@ func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 }
 
 func SendMaterialFormInfo(spreadSheetID string, materialFormInfo MaterialFormInfo) bool {
-	return AppendDataToSpreadSheet(spreadSheetID, time.Now(), materialFormInfo.Email, materialFormInfo.Material, materialFormInfo.Location)
+	return AppendDataToSpreadSheet(spreadSheetID, time.Now(), materialFormInfo.Email, materialFormInfo.Material, materialFormInfo.Loc)
 }
 
 func AppendDataToSpreadSheet(spreadSheetID string, time time.Time, vals ...string) bool {
