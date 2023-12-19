@@ -11,6 +11,7 @@ interface FormData {
 interface MessageStatus {
   message?: string; 
   success?: boolean;
+  processing?: boolean;
 }
 
 interface ErrorResponse {
@@ -35,6 +36,8 @@ const ProductSubmissionComponent: React.FC = () => {
     console.log("In Submit formData:", formData)
 
     if (formData.email != "") {
+      setMessageStatus({message: "", processing: true})
+      console.log("Message Status:", messageStatus)
       console.log("In Submit formData:", formData)
       console.log("Stringifyied JSON:", JSON.stringify(formData))
       try {
@@ -52,7 +55,7 @@ const ProductSubmissionComponent: React.FC = () => {
         if (response.ok) {
           const responseBody = await response.json();
           console.log('Response Body:', responseBody);
-          setMessageStatus({message: "", success: true})
+          setMessageStatus({message: "", success: true, processing: false})
           // console.log('Form submitted successfully');
         } else {
           const errorResponse: ErrorResponse = await response.json(); 
@@ -106,8 +109,10 @@ const ProductSubmissionComponent: React.FC = () => {
 
       {messageStatus.message && <div className="border-2 rounded border-red-700 bg-red-300 py-2 px-2 mt-1">
         {messageStatus.message}</div>}
+      {messageStatus.processing && <div className="border-2 rounded border-blue-700 bg-blue-300 py-2 px-2 mt-1">
+        We are processing your request. Please give us a moment. </div>}
       {messageStatus.success && <div className="border-2 rounded border-green-700 bg-green-300 py-2 px-2 mt-1">
-        Congrats! You have signed up. Stay Tuned!</div>}
+        We have your request. We will get back to you soon.</div>}
     </div>
   );
 
