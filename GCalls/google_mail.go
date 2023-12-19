@@ -12,7 +12,6 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"github.com/agnivade/levenshtein"
-	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
@@ -24,10 +23,10 @@ import (
 func ConnectToGmailAPI() *gmail.Service {
 	ctx := context.Background()
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
 
 	key := os.Getenv("PRIVATE_KEY")
 

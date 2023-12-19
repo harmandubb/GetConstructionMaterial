@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -75,10 +74,10 @@ func AppendDataToSpreadSheet(spreadSheetID string, time time.Time, vals ...strin
 func ConnectToSheetsAPI() *sheets.Service {
 	ctx := context.Background()
 
-	err := godotenv.Load() // This will load your .env file
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+	// err := godotenv.Load() // This will load your .env file
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
 	key := os.Getenv("PRIVATE_KEY")
 
 	newkey := strings.Replace(key, "\\n", "\n", -1)

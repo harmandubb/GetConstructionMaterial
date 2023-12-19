@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joho/godotenv"
 	"googlemaps.github.io/maps"
 )
 
@@ -19,10 +18,10 @@ type SupplierInfo struct {
 }
 
 func GetMapsClient() (*maps.Client, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return &maps.Client{}, err
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	return &maps.Client{}, err
+	// }
 
 	c, err := maps.NewClient(maps.WithAPIKey(os.Getenv("TESTING_MAPS_KEY")))
 	if err != nil {
