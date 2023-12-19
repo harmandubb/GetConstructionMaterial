@@ -17,7 +17,7 @@ export default function LandingPage() {
             <h1 className="text-5xl sm:text-6xl pb-4">Looking for Construction Material?</h1>
             <p className="pb-4">Get Construction Material will provide you with an easy way to search what material is avaialble near you and get the best price possible.</p>
             
-            <h2 className="pb-4 sm:pt-0 font-bold sm:text-xl">We will provide you with material information within 1 business day.</h2>
+            <h2 className="pb-4 sm:pt-0 font-bold sm:text-xl">We will provide you with material information within 2 business day.</h2>
             <p className="sm:pt-0 pb-4">Tell us what you are looking for and provide your email.</p>
           </div>
 
