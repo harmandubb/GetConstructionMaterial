@@ -28,7 +28,7 @@ func TestPublish(t *testing.T) {
 }
 
 func TestPushNotificationSetUp(t *testing.T) {
-	srv := ConnectToGmail()
+	srv := ConnectToGmailAPI()
 	watchResponse, err := pushNotificationSetUp(srv)
 	if err != nil {
 		t.Error(err)
@@ -41,7 +41,7 @@ func TestPushNotificationSetUp(t *testing.T) {
 }
 
 func TestNewEmailReceive(t *testing.T) {
-	srv := ConnectToGmail()
+	srv := ConnectToGmailAPI()
 	_, err := pushNotificationSetUp(srv)
 	if err != nil {
 		t.Error(err)
@@ -59,13 +59,13 @@ func TestNewEmailReceive(t *testing.T) {
 }
 
 func TestGetLatestUnreadMessage(t *testing.T) {
-	srv := ConnectToGmail()
+	srv := ConnectToGmailAPI()
 	getLatestUnreadMessage(srv)
 
 }
 
 func TestGetLatestUnreadMessageAndMarkRead(t *testing.T) {
-	srv := ConnectToGmail()
+	srv := ConnectToGmailAPI()
 	emailInfo, msgID, err := getLatestUnreadMessage(srv)
 	if err != nil {
 		t.Fail()

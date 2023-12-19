@@ -15,6 +15,12 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
+type MaterialFormInfo struct {
+	Email    string
+	Material string
+	Location string
+}
+
 func getPath(relativePath string) string {
 	_, b, _, _ := runtime.Caller(0)
 	// The directory of the file
@@ -26,6 +32,41 @@ func getPath(relativePath string) string {
 func SendEmailInfo(time time.Time, email string, spreadSheetID string) bool {
 	srv := ConnectToSheetsAPI()
 	return appendEmailToSpreadSheet(srv, spreadSheetID, time, email)
+
+}
+
+func SendMaterialFormInfo(spreadSheetID string, materialFormInfo MaterialFormInfo) bool {
+	return AppendDataToSpreadSheet(spreadSheetID, time.Now(), materialFormInfo.Email, materialFormInfo.Material, materialFormInfo.Location)
+}
+
+func AppendDataToSpreadSheet(spreadSheetID string, time time.Time, vals ...string) bool {
+	success := false
+	srv := ConnectToSheetsAPI()
+
+	// Prepare the data for the ValueRange
+	var data []interface{}
+
+	data = append(data, time)
+	for _, val := range vals {
+		data = append(data, val)
+	}
+
+	values := sheets.ValueRange{
+		Values: [][]interface{}{
+			data,
+		},
+	}
+
+	resp, err := srv.Spreadsheets.Values.Append(spreadSheetID, "Sheet1!A1", &values).ValueInputOption("USER_ENTERED").Do()
+	if err != nil {
+		log.Fatalf("Appending request Failed: %v", err)
+	}
+
+	if resp.ServerResponse.HTTPStatusCode == 200 {
+		success = true
+	}
+
+	return success
 
 }
 

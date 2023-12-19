@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -15,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/sashabaranov/go-openai"
 )
 
 type EmailOptions struct {
@@ -120,35 +118,6 @@ func SendEmail(body string, subj string, toEmail string) error {
 	}
 
 	return nil
-
-}
-
-func promptGPT(prompt string) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
-	key := os.Getenv("OPEN_AI_KEY")
-	client := openai.NewClient(key)
-
-	resp, err := client.CreateChatCompletion(
-		context.TODO(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt,
-				},
-			},
-		},
-	)
-	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
-		return "", err
-	}
-
-	return resp.Choices[0].Message.Content, nil
 
 }
 

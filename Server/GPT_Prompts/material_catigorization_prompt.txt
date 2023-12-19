@@ -1,0 +1,13 @@
+Input: "%s" 
+
+If the input item is related the the following trades categorizes:
+1. Electrical 
+2. Plumbing 
+3. Fire Prevention
+4. HVAC 
+5. Welding
+6. Roofing
+
+Then return the number preceding the category, else return the number 7. 
+
+Your output to this prompt should be a number only. 
