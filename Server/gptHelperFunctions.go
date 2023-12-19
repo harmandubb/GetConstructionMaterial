@@ -40,25 +40,25 @@ func numToCategory(num int) string {
 
 // Purpose: General function that creates a rpompt in the form that gpt understands
 // Parameters:
-// templatePath string --> to the template that you want to use
+// promptTemplate string --> actual template that you want to use
 // promptVals ...string --> needed amount of strings that are needed in the prompt to complete
 // Return:
 // prompt string --> prompt in the format that is sccepeted by gpt
 // error if present
 
-func createGPTPrompt(promptTemplatePath string, promptVals ...string) (string, error) {
-	file, err := os.Open(promptTemplatePath)
-	if err != nil {
-		return "", err
-	}
+func createGPTPrompt(promptTemplate string, promptVals ...string) (string, error) {
+	// file, err := os.Open(promptTemplatePath)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	prompt_Bytes, err := io.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
+	// prompt_Bytes, err := io.ReadAll(file)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	prompt_String := string(prompt_Bytes)
-
+	// prompt_String := string(prompt_Bytes)
+	prompt_String := promptTemplate
 	// Convert []string to []interface{}
 	args := make([]interface{}, len(promptVals))
 	for i, v := range promptVals {
@@ -73,12 +73,12 @@ func createGPTPrompt(promptTemplatePath string, promptVals ...string) (string, e
 
 // Purpose: creste the prompt for gpt to catogirize the materila
 // Parameters:
-// promptTemplatePath string --> file path name to the template prompt
+// promptTemplatePath string --> prompt in string form
 // material string --> material that you want to catogorize
 // Return:
 // prompt string --> completed prompt based on the template and material name
-func createMaterialCategorizationPrompt(promptTemplatePath string, material string) (string, error) {
-	return createGPTPrompt(promptTemplatePath, material)
+func createMaterialCategorizationPrompt(promptTemplate string, material string) (string, error) {
+	return createGPTPrompt(promptTemplate, material)
 }
 
 // Purpose: General funciton that prompts gpt
@@ -146,8 +146,18 @@ func PromptGPTMaterialCatogorization(promptTemplatePath string, material string)
 
 }
 
-func CreateEmailToSupplier(promptTemplatePath string, supplier string, material string) (string, string, error) {
-	emailMaterialRequestPrompt, err := createEmailMaterialRequestPrompt(promptTemplatePath, "", supplier, material)
+// Purpose: Create an email using key words such as supplier name and material to a supplier
+// Parameters:
+// emailPrompt string --> The template that is used to write the email
+// supplier string --> Supplier name to include in the email
+// material string --> Material name to include in the email
+// Return:
+// subj string --> Subject of the email
+// body string --> main messahe body of the email
+// error if present
+
+func CreateEmailToSupplier(emailPrompt string, supplier string, material string) (subj string, body string, err error) {
+	emailMaterialRequestPrompt, err := createEmailMaterialRequestPrompt(emailPrompt, "", supplier, material)
 	if err != nil {
 		return "", "", err
 	}
@@ -157,7 +167,7 @@ func CreateEmailToSupplier(promptTemplatePath string, supplier string, material 
 		return "", "", err
 	}
 
-	subj, body, err := parseGPTEmailResponse(gptEmailStructure)
+	subj, body, err = parseGPTEmailResponse(gptEmailStructure)
 	if err != nil {
 		return "", "", err
 	}
@@ -165,24 +175,32 @@ func CreateEmailToSupplier(promptTemplatePath string, supplier string, material 
 	return subj, body, nil
 }
 
-func createEmailMaterialRequestPrompt(promptTemplatePath string, salesPersonName string, companyName string, product string) (string, error) {
-	file, err := os.Open(promptTemplatePath)
-	if err != nil {
-		return "", err
-	}
+// Purpose: creates the filled in prompt based on inputs and template
+// Parameters:
+// promptTemplate string --> The string of the prompt
+// salesPersonName string --> name of the sales person if we know.
+// companyName string --> Name of the supplier that is being contact in this emial to make it more personal
+// Return:
+// prompt string --> Filled in prompt ready to submit to chat gpt to write the email
+// error if present
+func createEmailMaterialRequestPrompt(promptTemplate string, salesPersonName string, companyName string, product string) (string, error) {
+	// file, err := os.Open(promptTemplatePath)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	emailByte, err := io.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
+	// emailByte, err := io.ReadAll(file)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	emailString := string(emailByte)
+	// emailString := string(emailByte)
 
 	if salesPersonName == "" {
 		salesPersonName = "the sales team"
 	}
 
-	prompt := fmt.Sprintf(emailString, salesPersonName, companyName, product)
+	prompt := fmt.Sprintf(promptTemplate, salesPersonName, companyName, product)
 
 	return prompt, nil
 

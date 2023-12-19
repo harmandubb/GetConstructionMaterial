@@ -2,6 +2,7 @@ package server
 
 import (
 	g "docstruction/getconstructionmaterial/GCalls"
+	_ "embed"
 	"testing"
 )
 
@@ -13,9 +14,13 @@ func TestClientTest(t *testing.T) {
 	clientTest()
 }
 
+// //go:embed GPT_Prompts/material_catigorization_prompt.txt
+// var catigorizationTemplate string
+
+// //go:embed GPT_Prompts/email_prompt.txt
+// var emailTemplate string
+
 func TestContactSupplierForMaterial(t *testing.T) {
-	catigorizationTemplate := "../material_catigorization_prompt.txt"
-	emailTemplate := "../email_prompt.txt"
 
 	matFormInfo := g.MaterialFormInfo{
 		Email:    "info@gmail.com",

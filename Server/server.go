@@ -2,6 +2,7 @@ package server
 
 import (
 	g "docstruction/getconstructionmaterial/GCalls"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +23,12 @@ type ServerResponse struct {
 }
 
 const SUPPLIERCONTACTLIMIT = 3
+
+//go:embed GPT_Prompts/material_catigorization_prompt.txt
+var catigorizationTemplate string
+
+//go:embed GPT_Prompts/email_prompt.txt
+var emailTemplate string
 
 func getPath(relativePath string) string {
 	_, b, _, _ := runtime.Caller(0)
@@ -156,9 +163,6 @@ func Idle() {
 			resp := ServerResponse{
 				Success: result,
 			}
-
-			catigorizationTemplate := "../material_catigorization_prompt.txt"
-			emailTemplate := "../email_prompt.txt"
 
 			err = ContactSupplierForMaterial(materialFormInfo, catigorizationTemplate, emailTemplate)
 			if err != nil {
