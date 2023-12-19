@@ -79,7 +79,6 @@ func ConnectToSheetsAPI() *sheets.Service {
 	// if err != nil {
 	// 	log.Fatalf("Error loading .env file: %v", err)
 	// }
-
 	key := os.Getenv("PRIVATE_KEY")
 
 	newkey := strings.Replace(key, "\\n", "\n", -1)
