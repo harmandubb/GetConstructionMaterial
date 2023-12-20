@@ -33,3 +33,18 @@ func TestContactSupplierForMaterial(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestAlertAdmin(t *testing.T) {
+	matFormInfo := g.MaterialFormInfo{
+		Email:    "info@gmail.com",
+		Material: "Fire Stop Collars",
+		Loc:      "Richmond BC",
+	}
+
+	srv := g.ConnectToGmailAPI()
+
+	err := AlertAdmin(srv, matFormInfo, []string{"test1@example.com", "test2@example.com", "test3@example.com", "test4@example.com"})
+	if err != nil {
+		t.Fail()
+	}
+}

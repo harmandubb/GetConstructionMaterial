@@ -304,6 +304,11 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 
 func AlertAdmin(srv *gmail.Service, matInfo g.MaterialFormInfo, emailsSentTo []string) error {
 
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %v", err)
+	// }
+
 	adminEmail := os.Getenv("ADMIN_EMAIL")
 
 	subj := fmt.Sprintf("Docstruction Notificaiton: %s", matInfo.Material)
