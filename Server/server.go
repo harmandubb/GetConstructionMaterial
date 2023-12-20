@@ -8,9 +8,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"google.golang.org/api/gmail/v1"
 )
 
 type EmailFormInfo struct {
@@ -267,6 +270,8 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 
 	srv := g.ConnectToGmailAPI()
 
+	var emailsSentTo []string
+
 	for _, supInfo := range filteredSuppliers {
 		if counter < SUPPLIERCONTACTLIMIT {
 			if len(supInfo.Email) != 0 {
@@ -280,12 +285,38 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 
 					// send the emal to the supplier
 					g.SendEmail(srv, subj, body, supInfo.Email[0])
+					emailsSentTo = append(emailsSentTo, supInfo.Email[0])
 					counter = counter + 1
 				}
 			}
 		} else {
 			break
 		}
+	}
+
+	err = AlertAdmin(srv, matInfo, emailsSentTo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AlertAdmin(srv *gmail.Service, matInfo g.MaterialFormInfo, emailsSentTo []string) error {
+
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+
+	subj := fmt.Sprintf("Docstruction Notificaiton: %s", matInfo.Material)
+
+	msg := fmt.Sprintf("Inquiry from: %s\nInquiry material: %s\nInquiry Location: %s\n Emailed Suppliers:\n", matInfo.Email, matInfo.Material, matInfo.Loc)
+
+	for _, email := range emailsSentTo {
+		msg = msg + "- " + email + "\n"
+	}
+
+	_, err := g.SendEmail(srv, subj, msg, adminEmail)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -63,7 +63,7 @@ func ConnectToGmailAPI() *gmail.Service {
 // msg string --> message body
 // to string --> email to send to
 // Return:
-// *gmail.Message --> Pointer to either an emptry message struct or the message response form server
+// *gmail.Message --> Pointer to either an emptry message struct or the message response from server
 // error if any present
 func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error) {
 	message, err := gmail.NewUsersMessagesService(srv).Send(
@@ -74,8 +74,6 @@ func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error)
 	if err != nil {
 		return message, err
 	}
-
-	fmt.Println("Sent Email to: %s", to)
 
 	return message, nil
 
