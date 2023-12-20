@@ -17,7 +17,7 @@ func TestMaterialFormPublish(t *testing.T) {
 	matInfo := MaterialFormInfo{
 		Email:    "harmandubb@docstruction.com",
 		Material: "Fire Stopping Collars",
-		Location: "Surrey BC",
+		Loc:      "Surrey BC",
 	}
 
 	success := SendMaterialFormInfo("1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8", matInfo)

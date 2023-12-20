@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { Analytics } from '@vercel/analytics/react';
 
 import NavBar from './components/nav'
 import ProductSubmissionComponent from './components/productSubmission'
@@ -24,7 +25,7 @@ export default function LandingPage() {
           <ProductSubmissionComponent />
 
         </div>
-      
+        <Analytics />
       </main>
     </body>
 

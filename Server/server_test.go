@@ -25,7 +25,7 @@ func TestContactSupplierForMaterial(t *testing.T) {
 	matFormInfo := g.MaterialFormInfo{
 		Email:    "info@gmail.com",
 		Material: "Fire Stop Collars",
-		Location: "Richmond BC",
+		Loc:      "Richmond BC",
 	}
 
 	err := ContactSupplierForMaterial(matFormInfo, catigorizationTemplate, emailTemplate)
