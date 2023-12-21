@@ -12,10 +12,20 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"github.com/agnivade/levenshtein"
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 )
+
+type EmailInfo struct {
+	Date        time.Time
+	Subj        string
+	From        string
+	Body        string
+	Body_size   int64
+	attachments []string
+}
 
 // Purpose: Provides a server connection to the gmail api that is set in the environmental variables
 // Parameters: Non
@@ -23,10 +33,10 @@ import (
 func ConnectToGmailAPI() *gmail.Service {
 	ctx := context.Background()
 
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatalf("Error loading .env file: %v", err)
-	// }
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 
 	key := os.Getenv("PRIVATE_KEY")
 
@@ -75,7 +85,7 @@ func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error)
 		return message, err
 	}
 
-	fmt.Println("Sent Email to: %s", to)
+	fmt.Printf("Sent Email to: %s", to)
 
 	return message, nil
 
@@ -205,10 +215,17 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 
 }
 
-func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, string, error) {
+// Purpose: Check the most recent unread message
+// Parmeters:
+// srv *gmail.Service --> Gmail service access
+// Return:
+// emailINfo EmailInfo --> Struct to store the desired infromation from an email
+// msgID string --> gmail api id that is used to get more informaiton around the email including attachement info
+// error if present
+func getLatestUnreadMessage(srv *gmail.Service) (emailInfo EmailInfo, msgID string, err error) {
 	user := "me"
 
-	queryString := fmt.Sprintf("In:inbox and Is:unread")
+	queryString := "In:inbox and Is:unread"
 
 	var empty EmailInfo
 
@@ -217,7 +234,7 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, string, error) {
 		log.Fatalf("Unable to retrieve messages: %v", err)
 	}
 
-	msgID := r.Messages[0].Id
+	msgID = r.Messages[0].Id
 
 	msg, err := srv.Users.Messages.Get(user, msgID).Do()
 	if err != nil {
@@ -245,50 +262,57 @@ func getLatestUnreadMessage(srv *gmail.Service) (EmailInfo, string, error) {
 
 	var attachementsLocations []string
 
-	for _, part := range msg.Payload.Parts {
+	// for _, part := range msg.Payload.Parts {
+	part := msg.Payload
 
-		if len(part.Body.Data) > 0 {
-			body, err = base64.URLEncoding.DecodeString(part.Body.Data)
-			bodySize = part.Body.Size
-			if err != nil {
-				fmt.Printf("No message body present: %s", err)
-			}
-
-		}
-
+	if len(part.Body.Data) > 0 {
+		body, err = base64.URLEncoding.DecodeString(part.Body.Data)
+		bodySize = part.Body.Size
 		if err != nil {
-			fmt.Println("Error")
+			fmt.Printf("No message body present: %s", err)
 		}
-		if part.Filename != "" && part.Body.AttachmentId != "" {
 
-			attachment, err := srv.Users.Messages.Attachments.Get(user, msgID, part.Body.AttachmentId).Do()
-			if err != nil {
-				return empty, "", err
-			}
-
-			data, err := base64.URLEncoding.DecodeString(attachment.Data)
-			if err != nil {
-				return empty, "", err
-			}
-
-			// Save the attachment
-			attachmentLoc := fmt.Sprintf("Attachment/%s", part.Filename)
-			fmt.Println(attachmentLoc)
-			os.WriteFile(attachmentLoc, data, 0644)
-
-			attachementsLocations = append(attachementsLocations, attachmentLoc)
-		}
 	}
 
-	emailInfo := EmailInfo{
+	if err != nil {
+		fmt.Println("Error")
+	}
+	if part.Filename != "" && part.Body.AttachmentId != "" {
+
+		attachment, err := srv.Users.Messages.Attachments.Get(user, msgID, part.Body.AttachmentId).Do()
+		if err != nil {
+			return empty, "", err
+		}
+
+		data, err := base64.URLEncoding.DecodeString(attachment.Data)
+		if err != nil {
+			return empty, "", err
+		}
+
+		// Save the attachment
+		attachmentLoc := fmt.Sprintf("Attachment/%s", part.Filename)
+		fmt.Println(attachmentLoc)
+		os.WriteFile(attachmentLoc, data, 0644)
+
+		attachementsLocations = append(attachementsLocations, attachmentLoc)
+	}
+	// }
+
+	emailInfo = EmailInfo{
 		Date:        time.Now(),
 		Subj:        subj,
 		From:        from,
-		Body:        string(body),
+		Body:        trimOriginalMessage(string(body)),
 		Body_size:   bodySize,
 		attachments: attachementsLocations,
 	}
 
 	return emailInfo, msgID, nil
 
+}
+
+func trimOriginalMessage(body string) (trimmedBody string) {
+	trimmedBody = body[:strings.Index(body, "-----Original Message-----")]
+
+	return trimmedBody
 }

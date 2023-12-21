@@ -11,15 +11,6 @@ import (
 	"google.golang.org/api/gmail/v1"
 )
 
-type EmailInfo struct {
-	Date        time.Time
-	Subj        string
-	From        string
-	Body        string
-	Body_size   int64
-	attachments []string
-}
-
 type ProductInfo struct {
 	Date      time.Time
 	Name      string

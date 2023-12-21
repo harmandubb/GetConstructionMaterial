@@ -21,3 +21,13 @@ func TestSentEmail(t *testing.T) {
 	fmt.Println(msg)
 
 }
+
+func TestGetLatestUnreadMessage(t *testing.T) {
+	srv := ConnectToGmailAPI()
+	emailInfo, _, err := getLatestUnreadMessage(srv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(emailInfo)
+}
