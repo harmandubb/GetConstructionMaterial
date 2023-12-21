@@ -205,6 +205,18 @@ func createEmailMaterialRequestPrompt(promptTemplate string, salesPersonName str
 
 }
 
+// Purpose: Create a prompt for gpt that checks what the outcome of the supplier message
+// Can have outcomes in the following catigory:
+// 1. Success --> They have the product and they are providing some information
+// 2. Fail --> They do not have the product
+// TODO: can implement more behavours such as no but we have these products for future use.
+// TODO: Please contact this person for further inquiry (either internally or external of the corporation)
+// Parameters:
+// AnalysisTemplate string --> template that is to be used in the situation
+// Body string --> message body that is to be checked to see what the suplier is trying to say
+// Return:
+// prompt string --> the prompt that is suppose to be sent to chat gpt
+// error if present
 func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body string) (string, error) {
 	file, err := os.Open(receiveAnalysisTemplatePath)
 	if err != nil {
@@ -224,7 +236,14 @@ func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body s
 
 }
 
-func parseGPTEmailResponse(gptResponse string) (string, string, error) {
+// Purpose: Breaks the subject and the body from the gpt response that is used in sending out an email
+// Parameter:
+// gptResponse string --> response form gpt that is the subject and body for the email to be written
+// Return:
+// subj string --> subject to email
+// body string --> body message of an email
+// error if any present
+func parseGPTEmailResponse(gptResponse string) (subj string, body string, err error) {
 	subStartIndex := strings.Index(gptResponse, "Subject:")
 
 	if subStartIndex == -1 {
@@ -235,10 +254,10 @@ func parseGPTEmailResponse(gptResponse string) (string, string, error) {
 
 	flufLen := len("Subject: ")
 
-	subj := gptResponse[subStartIndex+flufLen : subEndIndex]
+	subj = gptResponse[subStartIndex+flufLen : subEndIndex]
 
 	//The body of the paragraph should be the rest of the stirng
-	body := gptResponse[subEndIndex+2:]
+	body = gptResponse[subEndIndex+2:]
 
 	return subj, body, nil
 
