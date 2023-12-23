@@ -13,6 +13,13 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
+type EmailMaterialInfo struct {
+	Present    bool
+	Price      float64
+	Currency   string
+	Data_Sheet bool
+}
+
 // Purpose: Convert an int from gpt to a category that is defined in the prompt template
 // Parameters:
 // num int --> num to corrolate to the category
@@ -263,55 +270,75 @@ func parseGPTEmailResponse(gptResponse string) (subj string, body string, err er
 
 }
 
-// func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
-// 	// // if present is avialable then we will continue the struct
-// 	var emailProductInfo EmailProductInfo
+func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailMaterialInfo, error) {
+	// // if present is avialable then we will continue the struct
+	var emailProductInfo EmailMaterialInfo
 
-// 	gptResponse = strings.ToLower(gptResponse)
+	gptResponse = strings.ToLower(gptResponse)
 
-// 	present := gptAnalysisPresent(gptResponse)
+	values := strings.Split(gptResponse, ",")
 
-// 	emailProductInfo.Present = present
+	present := gptAnalysisMaterialPresent(values[0])
 
-// 	if !present {
-// 		emailProductInfo.Currency = ""
-// 		emailProductInfo.Data_Sheet = false
-// 		emailProductInfo.Price = 0
+	emailProductInfo.Present = present
+	emailProductInfo.Currency = ""
+	emailProductInfo.Data_Sheet = false
+	emailProductInfo.Price = 0
 
-// 		return emailProductInfo, nil
-// 	}
+	if !present {
+		return emailProductInfo, nil
+	}
 
-// 	price, currency := gptAnalysisPrice(gptResponse)
-// 	emailProductInfo.Price = price
-// 	emailProductInfo.Currency = currency
+	if gptAnalysisSwitchStatement(values[1]) {
+		price, currency := gptAnalysisPrice(gptResponse)
+		emailProductInfo.Price = price
+		emailProductInfo.Currency = currency
+	}
 
-// 	datasheet := gptAnalysisDataSheet(gptResponse)
-// 	emailProductInfo.Data_Sheet = datasheet
+	if gptAnalysisSwitchStatement(values[2]) {
+		emailProductInfo.Data_Sheet = true
+	}
 
-// 	return emailProductInfo, nil
+	return emailProductInfo, nil
 
-// }
+}
 
-func gptAnalysisPresent(str string) bool {
+// Purpose: Function to quicly call to see if a field is present or not in an email
+// Parameter: Value string --> value you are tyring to see if something is present
+// Return: bool --> if a value is present
 
-	re := regexp.MustCompile(`present: ([yn])`)
-	matches := re.FindStringSubmatch(str)
-
-	if len(matches) > 1 {
-		presentValue := matches[1]
-
-		switch presentValue {
-		case "y":
-			return true
-		case "n":
-			return false
-		default:
-			return false
-		}
-	} else {
-		fmt.Println("Pattern not found")
+func gptAnalysisSwitchStatement(presentValue string) bool {
+	switch presentValue {
+	case "y", "yes":
+		return true
+	case "n", "no":
+		return false
+	default:
 		return false
 	}
+}
+
+// Purpose: Checks the gpt analysis to see if the material is deemed to be present.
+// Parameter:
+// str string --> analysis of the gpt response
+// Return:
+// bool --> if the product is present as analyized by chat gpt.
+
+func gptAnalysisMaterialPresent(presentValue string) bool {
+	return gptAnalysisSwitchStatement(presentValue)
+}
+
+// Purpose: given a EmailMaterialInfo struct what should I do to response to a user
+// Parameter:
+// emailMaterialInfo struct --> struct that contains the bools that shows certains fields present (price, datasheet)
+func ReactToEmailInfoContents(emailMaterialInfo EmailMaterialInfo) (emailPrompt string, err error) {
+	if emailMaterialInfo.Present {
+		if emailMaterialInfo.Price > 0 {
+
+		}
+	}
+
+	return "", nil
 }
 
 func gptAnalysisPrice(str string) (float64, string) {

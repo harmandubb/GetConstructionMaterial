@@ -222,7 +222,7 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 // emailINfo EmailInfo --> Struct to store the desired infromation from an email
 // msgID string --> gmail api id that is used to get more informaiton around the email including attachement info
 // error if present
-func getLatestUnreadMessage(srv *gmail.Service) (emailInfo EmailInfo, msgID string, err error) {
+func GetLatestUnreadMessage(srv *gmail.Service) (emailInfo EmailInfo, msgID string, err error) {
 	user := "me"
 
 	queryString := "In:inbox and Is:unread"

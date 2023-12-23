@@ -12,7 +12,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 
 	"image/color"
 	_ "image/gif"
@@ -34,57 +33,6 @@ type Product struct {
 	Currency      string
 }
 
-func connectToDataBase(database string) *pgxpool.Pool {
-	err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	url := os.Getenv("DB_URL")
-
-	db_url := url + database
-
-	dbpool, err := pgxpool.New(context.Background(), db_url)
-	if err != nil {
-		log.Fatal("Error:", err)
-	}
-
-	return dbpool
-}
-
-func CheckDataBase(database string) string {
-	p := connectToDataBase(database)
-
-	tx, err := p.Begin(context.Background())
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer tx.Rollback(context.Background())
-
-	rows, err := p.Query(context.Background(), `SELECT current_database();`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer rows.Close()
-	// defer stmt.Close()
-
-	var tableName string
-
-	for rows.Next() {
-		if err := rows.Scan(&tableName); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return tableName
-}
-
 func AddProductBasic(name string, category string, price float64, p *pgxpool.Pool) {
 	tx, err := p.Begin(context.Background())
 	if err != nil {
@@ -104,17 +52,6 @@ func AddProductBasic(name string, category string, price float64, p *pgxpool.Poo
 
 	tx.Commit(context.Background())
 
-}
-
-func dataBaseRead(sqlString string) (pgx.Rows, error) {
-	p := connectToDataBase("mynewdatabase")
-
-	rows, err := p.Query(context.Background(), sqlString) //returns a pointer to where rows are
-	if err != nil {
-		return rows, err
-	}
-
-	return rows, nil
 }
 
 func readDataBaseRow(tableName string, productName string) (Product, error) {
@@ -149,28 +86,6 @@ func readDataBaseRow(tableName string, productName string) (Product, error) {
 
 	return product, nil
 
-}
-
-func dataBaseTransmit(sqlString string, database string, args ...any) error {
-	p := connectToDataBase(database)
-
-	tx, err := p.Begin(context.Background())
-	if err != nil {
-		return err
-	}
-
-	defer tx.Rollback(context.Background())
-
-	_, err = tx.Exec(context.Background(), sqlString, args...)
-	if err != nil {
-		return err
-	}
-
-	if err := tx.Commit(context.Background()); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func AddProductDataSheet(name string, pdfPath string, database string, p *pgxpool.Pool) (uint32, error) {
