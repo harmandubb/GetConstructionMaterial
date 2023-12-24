@@ -35,5 +35,47 @@ func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, databa
 		return err
 	}
 
+	// Implement the read for this test
+
 	return nil
+}
+
+// Purpose: read the entire row that is related to a customer inquiry
+// Parameters:
+// tableNmae string --> table name in postgres that you want to get the informaiton from
+// sqlString string --> the command that will be sent to the table to read row information
+// args any --> arguements needed to fill and accomplish the readRowInfo
+// Return:
+//
+
+func readDataBaseRow(tableName string, customerEmail string) (custInquiry CustomerInquiry, err error) {
+	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE Email = %s", tableName, customerEmail)
+	rows, err := dataBaseRead(sqlString)
+	if err != nil {
+		return CustomerInquiry{}, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+
+		err := rows.Scan(
+			&custInquiry.ID,
+			&custInquiry.Email,
+			&custInquiry.Time_Inquired,
+			&custInquiry.Material,
+			&custInquiry.Loc,
+			&custInquiry.Present,
+			&custInquiry.Price,
+			&custInquiry.Currency,
+			&custInquiry.Data_Sheet,
+		)
+
+		if err != nil {
+			return CustomerInquiry{}, err
+		}
+	}
+
+	return custInquiry, nil
+
 }
