@@ -20,11 +20,6 @@ CREATE TABLE products (
     currency VARCHAR(3)
 );
 
--- Optional: Inserting some sample data
-INSERT INTO products (name, category, price)
-VALUES
-('Laptop', 'Electronics', 999.99),
-('Coffee Maker', 'Appliances', 59.99);
 
 -- Testing commands for the database 
 -- 1. Connect to the database

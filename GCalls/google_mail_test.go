@@ -24,7 +24,7 @@ func TestSentEmail(t *testing.T) {
 
 func TestGetLatestUnreadMessage(t *testing.T) {
 	srv := ConnectToGmailAPI()
-	emailInfo, _, err := getLatestUnreadMessage(srv)
+	emailInfo, _, err := GetLatestUnreadMessage(srv)
 	if err != nil {
 		t.Error(err)
 	}

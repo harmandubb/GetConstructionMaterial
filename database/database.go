@@ -93,8 +93,7 @@ func dataBaseRead(sqlString string) (pgx.Rows, error) {
 // Return:
 // Error if any present
 
-func dataBaseTransmit(sqlString string, database string, args ...any) error {
-	p := connectToDataBase(database)
+func dataBaseTransmit(p *pgxpool.Pool, sqlString string, database string, args ...any) error {
 
 	tx, err := p.Begin(context.Background())
 	if err != nil {
