@@ -28,9 +28,9 @@ type CustomerInquiry struct {
 // Return:
 // Error if present
 func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, database string, tableName string) (err error) {
-	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Time_Inquired, Material, Loc) VALUES($1, $2, $3, $4)", tableName)
+	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Time_Inquired, Material, Loc, Present, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8)", tableName)
 
-	err = dataBaseTransmit(p, sqlString, database, matForm.Email, time.Now(), matForm.Material, matForm.Loc)
+	err = dataBaseTransmit(p, sqlString, database, matForm.Email, time.Now(), matForm.Material, matForm.Loc, false, 0, "", nil)
 	if err != nil {
 		return err
 	}
@@ -48,8 +48,8 @@ func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, databa
 // Return:
 //
 
-func readDataBaseRow(tableName string, customerEmail string) (custInquiry CustomerInquiry, err error) {
-	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE Email = %s", tableName, customerEmail)
+func readCustomerInquiry(tableName string, customerEmail string) (custInquiry CustomerInquiry, err error) {
+	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE email = '%s'", tableName, customerEmail)
 	rows, err := dataBaseRead(sqlString)
 	if err != nil {
 		return CustomerInquiry{}, err
