@@ -1,13 +1,14 @@
 package api
 
 import (
+	"bytes"
 	d "docstruction/getconstructionmaterial/Database"
 	g "docstruction/getconstructionmaterial/GCalls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"testing"
 )
@@ -83,12 +84,22 @@ func TestMaterialFormHandler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	url := "http://localhost:8080/materialForm"
+	contentType := "application/json"
+	matInfo := g.MaterialFormInfo{
+		Email:    "test@gmail.com",
+		Material: "Fire Stopping Pipe Collars 2 in",
+		Loc:      "Seattle Washington",
+	}
 
-	resp, err := http.PostForm("http://localhost:8080",
-		url.Values{
-			"Email":    {"test@gmail.com"},
-			"Material": {"Fire Stopping Pipe Collars 2 in"},
-			"Loc":      {"Surrey BC"}})
+	content, err := json.Marshal(matInfo)
+	if err != nil {
+		t.Error(err)
+	}
+
+	reader := bytes.NewReader(content)
+
+	resp, err := http.Post(url, contentType, reader)
 
 	if err != nil {
 		t.Error(err)
@@ -97,5 +108,9 @@ func TestMaterialFormHandler(t *testing.T) {
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	fmt.Println(body)
+	if err != nil {
+		t.Error(err)
+	}
+	str := string(body)
+	fmt.Println(str)
 }

@@ -3,21 +3,21 @@
 -- psql -h localhost -U postgres -d mynewdatabase -f init_customer.sql
 
 -- create the table in the database
-CREATE TABLE Customer_Inquiry(
-    ID SERIAL PRIMARY KEY,
-    Inquiry_ID VARCHAR(36)
-    Email VARCHAR(255) NOT NULL, 
-    Time_Inquired  TIMESTAMP NOT NULL,
-    Material   VARCHAR(255),
-    Loc VARCHAR(255),
-    Present BOOLEAN,
-    Price NUMERIC(10, 2),
-    Currency VARCHAR(3),
-    Data_Sheet BYTEA
+CREATE TABLE customer_inquiry(
+    id SERIAL PRIMARY KEY,
+    inquiry_id VARCHAR(36),
+    email VARCHAR(255) NOT NULL, 
+    time_inquired  TIMESTAMP NOT NULL,
+    material   VARCHAR(255),
+    loc VARCHAR(255),
+    present BOOLEAN,
+    price NUMERIC(10, 2),
+    currency VARCHAR(3),
+    data_sheet BYTEA
 )
 
 -- Verify the table creation through listing all tables
 \dt
 
 -- check the structure of the table
-\d Customer_Inquiry
+\d customer_inquiry

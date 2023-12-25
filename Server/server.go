@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type EmailFormInfo struct {
@@ -48,6 +50,7 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 		"https://www.getconstructionmaterial.com": true,
 		"https://docstruction.com":                true,
 		"https://getconstructionmaterial.com":     true,
+		"http://localhost":                        true,
 	}
 
 	fmt.Println("Origin Request:", origin)
@@ -58,7 +61,7 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("OK:", ok)
 
 	if _, ok := allowedOrigins[origin]; ok {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 	}
@@ -106,12 +109,13 @@ func Idle() {
 				return
 			}
 
-			spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
+			// spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
 
-			result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
+			// result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
 
 			resp := ServerResponse{
-				Success: result,
+				// Success: result,
+				Success: true,
 			}
 
 			fmt.Println(resp.Success)
@@ -134,36 +138,49 @@ func Idle() {
 	})
 
 	http.HandleFunc("/materialForm", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w, r)
+		// setCORS(w, r)
+
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("Error loading .env file: %v", err)
+		}
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {
+			fmt.Println("In the options")
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
 		if r.Method == http.MethodPost {
+			fmt.Println("In the post")
 			w.Header().Set("Content-Type", "application/json")
 
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
+				fmt.Println("Error in read function")
 				w.WriteHeader(http.StatusExpectationFailed)
 				return
 			}
 
 			var materialFormInfo g.MaterialFormInfo
 
+			fmt.Println("Body", string(body))
+
 			err = json.Unmarshal(body, &materialFormInfo)
 			if err != nil {
+				fmt.Println("Error in json function")
 				w.WriteHeader(http.StatusExpectationFailed)
 				return
 			}
 
-			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8" //could make the storing of the id better. //Need to have the spread sheet id for the material form
+			fmt.Println("Material form info:", materialFormInfo)
 
-			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
+			// spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8" //could make the storing of the id better. //Need to have the spread sheet id for the material form
 
-			p := d.ConnectToDataBase("DB_NAME") //need to set this in a environmental variabl
+			// result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
+
+			p := d.ConnectToDataBase(os.Getenv("DB_NAME")) //need to set this in a environmental variabl
 
 			inquiryID, err := d.AddBlankCustomerInquiry(p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE"))
 			if err != nil {
@@ -171,10 +188,14 @@ func Idle() {
 			}
 
 			resp := ServerResponse{
-				Success: result,
+				// Success: result,
+				Success: true,
 			}
 
-			go api.ProcessCustomerInquiry(inquiryID, os.Getenv("CATIGORIZATION_TEMPLATE"), os.Getenv("EMAIL_TEMPLATE"))
+			// catigorizationTemplate := os.Getenv("CATIGORIZATION_TEMPLATE")
+			// emailTemplate := os.Getenv("EMAIL_TEMPLATE")
+
+			go api.ProcessCustomerInquiry(inquiryID, catigorizationTemplate, emailTemplate)
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
