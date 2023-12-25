@@ -2,6 +2,7 @@ package database
 
 import (
 	g "docstruction/getconstructionmaterial/GCalls"
+
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 
 type CustomerInquiry struct {
 	ID            int
+	Inquiry_ID    string
 	Email         string
 	Time_Inquired time.Time
 	Material      string
@@ -28,58 +30,19 @@ type CustomerInquiry struct {
 // tableNmae string --> name of the table that you want to input the data into
 // Return:
 // Error if present
-func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, database string, tableName string) (err error) {
-	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Time_Inquired, Material, Loc, Present, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8)", tableName)
+func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, tableName string) (inquiryID string, err error) {
 
-	err = dataBaseTransmit(p, sqlString, database, matForm.Email, time.Now(), matForm.Material, matForm.Loc, false, 0, "", nil)
+	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)", tableName)
+
+	inquiryID = generateInquiryID()
+
+	err = dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, 0, "", nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Implement the read for this test
-
-	return nil
-}
-
-// Purpose: read the entire row that is related to a customer inquiry
-// Parameters:
-// tableNmae string --> table name in postgres that you want to get the informaiton from
-// sqlString string --> the command that will be sent to the table to read row information
-// args any --> arguements needed to fill and accomplish the readRowInfo
-// Return:
-// custInquiry CustomerInquiry struct --> Retruns what ever infromation is present for the customer in quiry so far
-// Error if present
-
-func readCustomerInquiry(tableName string, customerEmail string) (custInquiry CustomerInquiry, err error) {
-	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE email = '%s'", tableName, customerEmail)
-	rows, err := dataBaseRead(sqlString)
-	if err != nil {
-		return CustomerInquiry{}, err
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-
-		err := rows.Scan(
-			&custInquiry.ID,
-			&custInquiry.Email,
-			&custInquiry.Time_Inquired,
-			&custInquiry.Material,
-			&custInquiry.Loc,
-			&custInquiry.Present,
-			&custInquiry.Price,
-			&custInquiry.Currency,
-			&custInquiry.Data_Sheet,
-		)
-
-		if err != nil {
-			return CustomerInquiry{}, err
-		}
-	}
-
-	return custInquiry, nil
-
+	return inquiryID, nil
 }
 
 // Purpose: update the customer inquiry row given a customer email
@@ -136,6 +99,54 @@ func updateCustomerInquiryDataSheet(p *pgxpool.Pool, database string, tableName 
 	return nil
 }
 
-func generateInquiryID() string {
-	return uuid.New().String()
+// Purpose: Allow a way to generate an ID per inquiry that is consistent between different tables
+// Returns:
+// id string --> unique ID to relate the
+func generateInquiryID() (id string) {
+	id = uuid.New().String()
+
+	fmt.Println(len(id))
+	return id
+}
+
+// Purpose: read the entire row that is related to a customer inquiry
+// Parameters:
+// tableNmae string --> table name in postgres that you want to get the informaiton from
+// sqlString string --> the command that will be sent to the table to read row information
+// args any --> arguements needed to fill and accomplish the readRowInfo
+// Return:
+// custInquiry CustomerInquiry struct --> Retruns what ever infromation is present for the customer in quiry so far
+// Error if present
+
+func ReadCustomerInquiry(tableName string, inquiryID string) (custInquiry CustomerInquiry, err error) {
+	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE inquiry_id = '%s'", tableName, inquiryID)
+	rows, err := dataBaseRead(sqlString)
+	if err != nil {
+		return CustomerInquiry{}, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+
+		err := rows.Scan(
+			&custInquiry.ID,
+			&custInquiry.Inquiry_ID,
+			&custInquiry.Email,
+			&custInquiry.Time_Inquired,
+			&custInquiry.Material,
+			&custInquiry.Loc,
+			&custInquiry.Present,
+			&custInquiry.Price,
+			&custInquiry.Currency,
+			&custInquiry.Data_Sheet,
+		)
+
+		if err != nil {
+			return CustomerInquiry{}, err
+		}
+	}
+
+	return custInquiry, nil
+
 }

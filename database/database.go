@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -15,7 +16,7 @@ import (
 // database string --> name of the database you are trying to connect to
 // Return:
 // *pgxpool.Pool --> pointer that allows you to interface with the database
-func connectToDataBase(database string) *pgxpool.Pool {
+func ConnectToDataBase(database string) *pgxpool.Pool {
 	err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
 	if err != nil {
 		log.Fatalln(err)
@@ -39,7 +40,7 @@ func connectToDataBase(database string) *pgxpool.Pool {
 // Return:
 // tableName string --> name of the table name in the database?? (TODO: what if there are multiple tables in the database?)
 func CheckDataBase(database string) (tableName string) {
-	p := connectToDataBase(database)
+	p := ConnectToDataBase(database)
 
 	tx, err := p.Begin(context.Background())
 	if err != nil {
@@ -75,7 +76,7 @@ func CheckDataBase(database string) (tableName string) {
 // pgx.Rows --> infromation in a row style for the result of the sqlString prompt
 // Errors if present
 func dataBaseRead(sqlString string) (pgx.Rows, error) {
-	p := connectToDataBase("mynewdatabase")
+	p := ConnectToDataBase("mynewdatabase")
 
 	rows, err := p.Query(context.Background(), sqlString) //returns a pointer to where rows are
 	if err != nil {
@@ -93,7 +94,7 @@ func dataBaseRead(sqlString string) (pgx.Rows, error) {
 // Return:
 // Error if any present
 
-func dataBaseTransmit(p *pgxpool.Pool, sqlString string, database string, args ...any) error {
+func dataBaseTransmit(p *pgxpool.Pool, sqlString string, args ...any) error {
 
 	tx, err := p.Begin(context.Background())
 	if err != nil {
@@ -112,4 +113,31 @@ func dataBaseTransmit(p *pgxpool.Pool, sqlString string, database string, args .
 	}
 
 	return nil
+}
+
+// Purpose: Erased the testdata base table
+// Parameter:
+// p *pgxpool.Pool --> pointer to the database connector
+// tableNmae string --> The table that you want to reset
+// Return:
+// Error if present
+func ResetTestDataBase(p *pgxpool.Pool, tableName string) error {
+	sqlString := fmt.Sprintf("DELETE FROM %s", tableName)
+
+	tx, err := p.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback(context.Background())
+
+	_, err = tx.Exec(context.Background(), sqlString)
+	if err != nil {
+		return err
+	}
+
+	tx.Commit(context.Background())
+
+	return nil
+
 }

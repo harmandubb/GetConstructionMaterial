@@ -1,6 +1,8 @@
 package server
 
 import (
+	api "docstruction/getconstructionmaterial/API"
+	d "docstruction/getconstructionmaterial/Database"
 	g "docstruction/getconstructionmaterial/GCalls"
 	_ "embed"
 	"encoding/json"
@@ -12,8 +14,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
-
-	"google.golang.org/api/gmail/v1"
 )
 
 type EmailFormInfo struct {
@@ -24,8 +24,6 @@ type EmailFormInfo struct {
 type ServerResponse struct {
 	Success bool
 }
-
-const SUPPLIERCONTACTLIMIT = 3
 
 //go:embed GPT_Prompts/material_catigorization_prompt.txt
 var catigorizationTemplate string
@@ -146,7 +144,6 @@ func Idle() {
 
 		if r.Method == http.MethodPost {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Println("I am in the material form branch")
 
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
@@ -166,14 +163,18 @@ func Idle() {
 
 			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
 
+			p := d.ConnectToDataBase("DB_NAME") //need to set this in a environmental variabl
+
+			inquiryID, err := d.AddBlankCustomerInquiry(p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE"))
+			if err != nil {
+				log.Fatalf("Error when adding customer inquiry to database: %v", err)
+			}
+
 			resp := ServerResponse{
 				Success: result,
 			}
 
-			err = ContactSupplierForMaterial(materialFormInfo, catigorizationTemplate, emailTemplate)
-			if err != nil {
-				log.Fatalf("Error when Sending Supplier Emails: %v", err)
-			}
+			go api.ProcessCustomerInquiry(inquiryID, os.Getenv("CATIGORIZATION_TEMPLATE"), os.Getenv("EMAIL_TEMPLATE"))
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
@@ -181,10 +182,6 @@ func Idle() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
-			fmt.Println(jsonResp)
-
-			fmt.Println("Sending response")
 
 			w.Write(jsonResp)
 		}
@@ -196,133 +193,4 @@ func Idle() {
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
-}
-
-// Purpose: Execute logic that takes the material info from form and sends out emails to supplier
-// Parameters:
-// MatInfo g.MaterialFromInfo --> Struct that carried the information in the form. (material name and user request email)
-// catigoorizationTemplate string --> Pathway to the tempalte dues for the gpt promp maker
-// emailTemplate string --> Pathway to the template used for the gpt email prompt maker
-// loc *mapts.LatLng --> Google maps struct for holding the llat and lng for the place the user is requesting from.
-// Return:
-// error if any present
-func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) error {
-	//Call chat gpt to catigorized the item
-
-	fmt.Printf("Inputted material form info:")
-	fmt.Println(matInfo)
-
-	fmt.Println(matInfo.Email)
-	fmt.Println(matInfo.Loc)
-	fmt.Println(matInfo.Material)
-
-	catergory, err := PromptGPTMaterialCatogorization(catigorizationTemplate, matInfo.Material)
-	if err != nil {
-		log.Fatalf("Catogirization Error: %v", err)
-		return err
-	}
-
-	// Search for near by supplies for the category
-	c, err := g.GetMapsClient()
-	if err != nil {
-		log.Fatalf("Map Client Connection Error: %v", err)
-		return err
-	}
-
-	//Get Lat and lng coordinates
-	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Loc)
-	if err != nil {
-		log.Fatalf("Geocoding Converstion Error: %v", err)
-		return err
-	}
-
-	searchResp, err := g.SearchSuppliers(c, catergory, &geometry.Location)
-	if err != nil {
-		log.Fatalf("Map Search Supplier Error: %v", err)
-		return err
-	}
-
-	var supplierInfo []g.SupplierInfo
-
-	for _, supplier := range searchResp.Results {
-		supplier, _ := g.GetSupplierInfo(c, supplier)
-
-		supplierInfo = append(supplierInfo, supplier)
-	}
-
-	//Get the supplier emails from the info that is found
-	var filteredSuppliers []g.SupplierInfo // Assuming SupplierInfo is the type of your slice elements
-
-	for _, supInfo := range supplierInfo {
-		email, err := FindSupplierContactEmail(supInfo.Website)
-		if err != nil {
-			log.Printf("Supplier Email Get Error: %v", err) // Log the error, but don't stop the entire process
-			continue                                        // Skip this supplier and continue with the next one
-		} else {
-			supInfo.Email = email
-			filteredSuppliers = append(filteredSuppliers, supInfo) // Add to the new slice
-		}
-	}
-
-	supplierInfo = nil //Setting to nil so the memory allocatin is lower.
-
-	counter := 0
-
-	srv := g.ConnectToGmailAPI()
-
-	var emailsSentTo []string
-
-	for _, supInfo := range filteredSuppliers {
-		if counter < SUPPLIERCONTACTLIMIT {
-			if len(supInfo.Email) != 0 {
-				// get the email prompt from chat gpt
-				if IsValidEmail(supInfo.Email[0]) {
-					subj, body, err := CreateEmailToSupplier(emailTemplate, supInfo.Name, matInfo.Material)
-					if err != nil {
-						log.Fatalf("GPT Email Create Error: %v", err)
-						return err
-					}
-
-					// send the emal to the supplier
-					g.SendEmail(srv, subj, body, supInfo.Email[0])
-					emailsSentTo = append(emailsSentTo, supInfo.Email[0])
-					counter = counter + 1
-				}
-			}
-		} else {
-			break
-		}
-	}
-
-	err = AlertAdmin(srv, matInfo, emailsSentTo)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func AlertAdmin(srv *gmail.Service, matInfo g.MaterialFormInfo, emailsSentTo []string) error {
-
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatalf("Error loading .env file: %v", err)
-	// }
-
-	adminEmail := os.Getenv("ADMIN_EMAIL")
-
-	subj := fmt.Sprintf("Docstruction Notificaiton: %s", matInfo.Material)
-
-	msg := fmt.Sprintf("Inquiry from: %s\nInquiry material: %s\nInquiry Location: %s\n Emailed Suppliers:\n", matInfo.Email, matInfo.Material, matInfo.Loc)
-
-	for _, email := range emailsSentTo {
-		msg = msg + "- " + email + "\n"
-	}
-
-	_, err := g.SendEmail(srv, subj, msg, adminEmail)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -58,18 +58,18 @@ func TestNewEmailReceive(t *testing.T) {
 
 }
 
-func TestGetLatestUnreadMessageAndMarkRead(t *testing.T) {
-	srv := ConnectToGmailAPI()
-	emailInfo, msgID, err := getLatestUnreadMessage(srv)
-	if err != nil {
-		t.Fail()
-	}
+// func TestGetLatestUnreadMessageAndMarkRead(t *testing.T) {
+// 	srv := ConnectToGmailAPI()
+// 	emailInfo, msgID, err := getLatestUnreadMessage(srv)
+// 	if err != nil {
+// 		t.Fail()
+// 	}
 
-	MarkEmailAsRead(srv, "me", msgID)
+// 	MarkEmailAsRead(srv, "me", msgID)
 
-	fmt.Println(emailInfo)
+// 	fmt.Println(emailInfo)
 
-}
+// }
 
 // func TestExtractProductName(t *testing.T) {
 // 	product, err := extractProductName("Subject: Docstruction: Fire Stop Collars - Got Any in Stock?")

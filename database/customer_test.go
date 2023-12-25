@@ -6,7 +6,7 @@ import (
 )
 
 func TestAddBlankCustomerInquiry(t *testing.T) {
-	p := connectToDataBase("mynewdatabase")
+	p := ConnectToDataBase("mynewdatabase")
 
 	matForm := g.MaterialFormInfo{
 		Email:    "harmand1999@gmail.com",
@@ -14,12 +14,12 @@ func TestAddBlankCustomerInquiry(t *testing.T) {
 		Material: "Fire Stop Fire Collars 2 in",
 	}
 
-	err := AddBlankCustomerInquiry(p, matForm, "mynewdatabase", "Customer_Inquiry")
+	_, err := AddBlankCustomerInquiry(p, matForm, "Customer_Inquiry")
 	if err != nil {
 		t.Error(err)
 	}
 
-	cust, err := readCustomerInquiry("customer_inquiry", "harmand1999@gmail.com")
+	cust, err := ReadCustomerInquiry("customer_inquiry", "harmand1999@gmail.com")
 	if err != nil {
 		t.Error(err)
 	}
@@ -62,6 +62,6 @@ func TestAddBlankCustomerInquiry(t *testing.T) {
 }
 
 func TestGenerateInquiryNumber(t *testing.T) {
-	generateInquiryNumber()
+	generateInquiryID()
 
 }

@@ -5,6 +5,7 @@
 -- create the table in the database
 CREATE TABLE Customer_Inquiry(
     ID SERIAL PRIMARY KEY,
+    Inquiry_ID VARCHAR(36)
     Email VARCHAR(255) NOT NULL, 
     Time_Inquired  TIMESTAMP NOT NULL,
     Material   VARCHAR(255),
