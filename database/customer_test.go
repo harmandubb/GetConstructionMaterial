@@ -60,3 +60,8 @@ func TestAddBlankCustomerInquiry(t *testing.T) {
 	}
 
 }
+
+func TestGenerateInquiryNumber(t *testing.T) {
+	generateInquiryNumber()
+
+}

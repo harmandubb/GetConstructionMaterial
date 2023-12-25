@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -133,4 +134,8 @@ func updateCustomerInquiryPrice(p *pgxpool.Pool, database string, tableName stri
 
 func updateCustomerInquiryDataSheet(p *pgxpool.Pool, database string, tableName string, customerEmail string, price float64, currency string) (err error) {
 	return nil
+}
+
+func generateInquiryID() string {
+	return uuid.New().String()
 }
