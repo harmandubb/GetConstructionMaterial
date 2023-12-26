@@ -25,6 +25,7 @@ type CustomerInquiry struct {
 
 // Purpose: create a customer inquiry row that has all basic info about the user and material filled
 // Parameters:
+// p *pgxpool.Pool -->
 // matForm g.MaterialFormInfo --> struct holding the info inputted by the user
 // database string --> database name that you want to store the info in
 // tableNmae string --> name of the table that you want to input the data into
