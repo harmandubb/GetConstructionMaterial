@@ -14,8 +14,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type EmailFormInfo struct {
@@ -50,7 +48,6 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 		"https://www.getconstructionmaterial.com": true,
 		"https://docstruction.com":                true,
 		"https://getconstructionmaterial.com":     true,
-		"http://localhost":                        true,
 	}
 
 	fmt.Println("Origin Request:", origin)
@@ -109,13 +106,12 @@ func Idle() {
 				return
 			}
 
-			// spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
+			spreadsheetID := "1ZowyzJ008toPYNn0mFc2wG6YTAop9HfnbMPLIM4rRZw" //could make the storing of the id better.
 
-			// result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
+			result := g.SendEmailInfo(emailFormInfo.Time, emailFormInfo.Email, spreadsheetID)
 
 			resp := ServerResponse{
-				// Success: result,
-				Success: true,
+				Success: result,
 			}
 
 			fmt.Println(resp.Success)
@@ -128,22 +124,18 @@ func Idle() {
 				return
 			}
 
-			fmt.Println(jsonResp)
-
-			fmt.Println("Sending response")
-
 			w.Write(jsonResp)
 		}
 
 	})
 
 	http.HandleFunc("/materialForm", func(w http.ResponseWriter, r *http.Request) {
-		// setCORS(w, r)
+		setCORS(w, r)
 
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatalf("Error loading .env file: %v", err)
-		}
+		// err := godotenv.Load()
+		// if err != nil {
+		// 	log.Fatalf("Error loading .env file: %v", err)
+		// }
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {
@@ -165,8 +157,6 @@ func Idle() {
 
 			var materialFormInfo g.MaterialFormInfo
 
-			fmt.Println("Body", string(body))
-
 			err = json.Unmarshal(body, &materialFormInfo)
 			if err != nil {
 				fmt.Println("Error in json function")
@@ -174,11 +164,9 @@ func Idle() {
 				return
 			}
 
-			fmt.Println("Material form info:", materialFormInfo)
+			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8" //could make the storing of the id better. //Need to have the spread sheet id for the material form
 
-			// spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8" //could make the storing of the id better. //Need to have the spread sheet id for the material form
-
-			// result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
+			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
 
 			p := d.ConnectToDataBase(os.Getenv("DB_NAME")) //need to set this in a environmental variabl
 
@@ -188,8 +176,7 @@ func Idle() {
 			}
 
 			resp := ServerResponse{
-				// Success: result,
-				Success: true,
+				Success: result,
 			}
 
 			// catigorizationTemplate := os.Getenv("CATIGORIZATION_TEMPLATE")
@@ -209,8 +196,6 @@ func Idle() {
 	})
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe("0.0.0.0:8080", nil)
-	// err := http.ListenAndServeTLS("0.0.0.0:8080", getPath("cert.pem"), getPath("key.pem"), nil)
-	// err := http.ListenAndServeTLS("0.0.0.0:8080", "cert.pem", "key.pem", nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

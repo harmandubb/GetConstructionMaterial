@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 // Purpose: provide a way to connect to a database that is running locally
@@ -17,10 +16,10 @@ import (
 // Return:
 // *pgxpool.Pool --> pointer that allows you to interface with the database
 func ConnectToDataBase(database string) *pgxpool.Pool {
-	err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// err := godotenv.Load() //need to load the environmental variables in to the area before they can be used.
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
 
 	url := os.Getenv("DB_URL")
 
