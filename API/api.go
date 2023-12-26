@@ -47,6 +47,10 @@ func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, 
 
 	for _, s := range suppInfo {
 		emails = append(emails, s.Email[0])
+		err = d.AddBlankEmailInquiryEntry(p, inquiryID, matForm.Email, matForm.Material, s, true, "emails")
+		if err != nil {
+			fmt.Println("Failed to added email sent into database. ")
+		}
 	}
 
 	AlertAdmin(srv, matForm, emails)
@@ -54,6 +58,13 @@ func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, 
 	return nil
 
 }
+
+// Purpose: Send en email to the admin about th erequest that has come in and what supplier (emails) are used to contact for th erequest
+// Parameters:
+// srv *gmail.Service --> Service used to access gmail
+// matinfo g.MaterialFormINfo --> material infromaiton that is submitted to the website by client
+// emailsSentTo []string --> emails list that tells where the inquiry emails are sent to (suppliers)
+// Error is any present
 
 func AlertAdmin(srv *gmail.Service, matInfo g.MaterialFormInfo, emailsSentTo []string) error {
 

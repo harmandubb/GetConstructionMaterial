@@ -91,7 +91,7 @@ func TestMaterialFormHandler(t *testing.T) {
 	matInfo := g.MaterialFormInfo{
 		Email:    "test@gmail.com",
 		Material: "Fire Stopping Pipe Collars 2 in",
-		Loc:      "Seattle Washington",
+		Loc:      "Las Angeles California",
 	}
 
 	content, err := json.Marshal(matInfo)
