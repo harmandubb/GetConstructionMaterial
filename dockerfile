@@ -20,6 +20,9 @@ COPY main.go .
 COPY ./GCalls ./GCalls
 COPY ./Auth2 ./Auth2
 COPY ./API ./API
+COPY ./Websites ./Websites
+COPY ./Database ./Database
+COPY ./GPT ./GPT
 
 # # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o myapp
