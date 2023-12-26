@@ -47,7 +47,7 @@ func TestGetSupplierInfo(t *testing.T) {
 
 	fmt.Println(supplierInfo.Name)
 	fmt.Println(supplierInfo.Address)
-	fmt.Println(supplierInfo.Location)
+	fmt.Println(supplierInfo.Geometry)
 	fmt.Println(supplierInfo.Website)
 
 }

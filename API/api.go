@@ -10,6 +10,7 @@ import (
 	gpt "docstruction/getconstructionmaterial/GPT"
 	w "docstruction/getconstructionmaterial/Websites"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/api/gmail/v1"
 )
 
@@ -22,9 +23,9 @@ const SUPPLIERCONTACTLIMIT = 3
 // emailTemplate string --> template to feed gpt to get an email written
 // Return:
 // Error if present
-func ProcessCustomerInquiry(inquiryID, catigorizationTemplate, emailTemplate string) (err error) {
+func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, emailTemplate string) (err error) {
 	// use the inquiry id to get the row of information in the database
-	custInquiry, err := d.ReadCustomerInquiry(os.Getenv("CUSTOMER_INQUIRY_TABLE"), inquiryID)
+	custInquiry, err := d.ReadCustomerInquiry(p, os.Getenv("CUSTOMER_INQUIRY_TABLE"), inquiryID)
 	if err != nil {
 		return err
 	}
@@ -35,10 +36,20 @@ func ProcessCustomerInquiry(inquiryID, catigorizationTemplate, emailTemplate str
 		Loc:      custInquiry.Loc,
 	}
 
-	err = ContactSupplierForMaterial(matForm, catigorizationTemplate, emailTemplate)
+	srv := g.ConnectToGmailAPI()
+
+	suppInfo, err := ContactSupplierForMaterial(srv, matForm, catigorizationTemplate, emailTemplate)
 	if err != nil {
 		return err
 	}
+
+	var emails []string
+
+	for _, s := range suppInfo {
+		emails = append(emails, s.Email[0])
+	}
+
+	AlertAdmin(srv, matForm, emails)
 
 	return nil
 
@@ -77,7 +88,7 @@ func AlertAdmin(srv *gmail.Service, matInfo g.MaterialFormInfo, emailsSentTo []s
 // loc *mapts.LatLng --> Google maps struct for holding the llat and lng for the place the user is requesting from.
 // Return:
 // error if any present
-func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) error {
+func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) (emailsSentto []g.SupplierInfo, err error) {
 	//Call chat gpt to catigorized the item
 
 	fmt.Printf("Inputted material form info:")
@@ -90,27 +101,27 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 	catergory, err := gpt.PromptGPTMaterialCatogorization(catigorizationTemplate, matInfo.Material)
 	if err != nil {
 		log.Fatalf("Catogirization Error: %v", err)
-		return err
+		return []g.SupplierInfo{}, err
 	}
 
 	// Search for near by supplies for the category
 	c, err := g.GetMapsClient()
 	if err != nil {
 		log.Fatalf("Map Client Connection Error: %v", err)
-		return err
+		return []g.SupplierInfo{}, err
 	}
 
 	//Get Lat and lng coordinates
 	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Loc)
 	if err != nil {
 		log.Fatalf("Geocoding Converstion Error: %v", err)
-		return err
+		return []g.SupplierInfo{}, err
 	}
 
 	searchResp, err := g.SearchSuppliers(c, catergory, &geometry.Location)
 	if err != nil {
 		log.Fatalf("Map Search Supplier Error: %v", err)
-		return err
+		return []g.SupplierInfo{}, err
 	}
 
 	var supplierInfo []g.SupplierInfo
@@ -139,9 +150,7 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 
 	counter := 0
 
-	srv := g.ConnectToGmailAPI()
-
-	var emailsSentTo []string
+	var emailsSentTo []g.SupplierInfo
 
 	for _, supInfo := range filteredSuppliers {
 		if counter < SUPPLIERCONTACTLIMIT {
@@ -151,13 +160,16 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 					subj, body, err := gpt.CreateEmailToSupplier(emailTemplate, supInfo.Name, matInfo.Material)
 					if err != nil {
 						log.Fatalf("GPT Email Create Error: %v", err)
-						return err
+						return []g.SupplierInfo{}, err
 					}
 
 					// send the emal to the supplier
-					g.SendEmail(srv, subj, body, supInfo.Email[0])
-					emailsSentTo = append(emailsSentTo, supInfo.Email[0])
-					counter = counter + 1
+					_, err = g.SendEmail(srv, subj, body, supInfo.Email[0])
+					if err == nil {
+						//email sent successfully
+						emailsSentTo = append(emailsSentTo, supInfo)
+						counter = counter + 1
+					}
 				}
 			}
 		} else {
@@ -165,10 +177,5 @@ func ContactSupplierForMaterial(matInfo g.MaterialFormInfo, catigorizationTempla
 		}
 	}
 
-	err = AlertAdmin(srv, matInfo, emailsSentTo)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return emailsSentTo, nil
 }

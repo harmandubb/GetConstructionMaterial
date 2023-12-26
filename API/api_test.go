@@ -55,7 +55,9 @@ func TestContactSupplierForMaterial(t *testing.T) {
 	// Convert the bytes to a string
 	emailTemplate := string(data)
 
-	err = ContactSupplierForMaterial(matFormInfo, catigorizationTemplate, emailTemplate)
+	srv := g.ConnectToGmailAPI()
+
+	_, err = ContactSupplierForMaterial(srv, matFormInfo, catigorizationTemplate, emailTemplate)
 	if err != nil {
 		t.Error(err)
 	}

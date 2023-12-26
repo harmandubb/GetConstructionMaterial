@@ -19,7 +19,7 @@ func TestAddBlankCustomerInquiry(t *testing.T) {
 		t.Error(err)
 	}
 
-	cust, err := ReadCustomerInquiry("customer_inquiry", "harmand1999@gmail.com")
+	cust, err := ReadCustomerInquiry(p, "customer_inquiry", "harmand1999@gmail.com")
 	if err != nil {
 		t.Error(err)
 	}

@@ -9,10 +9,10 @@ import (
 )
 
 type SupplierInfo struct {
-	ID       string
+	MapsID   string
 	Name     string
 	Address  string
-	Location maps.LatLng
+	Geometry maps.AddressGeometry
 	Website  string
 	Email    []string
 }
@@ -99,14 +99,11 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 	}
 
 	supInfo := SupplierInfo{
-		ID:      id,
-		Name:    placeResult.Name,
-		Address: address,
-		Location: maps.LatLng{
-			Lat: placeDetailsResp.Geometry.Location.Lat,
-			Lng: placeDetailsResp.Geometry.Location.Lng,
-		},
-		Website: placeDetailsResp.Website,
+		MapsID:   id,
+		Name:     placeResult.Name,
+		Address:  address,
+		Geometry: placeDetailsResp.Geometry,
+		Website:  placeDetailsResp.Website,
 	}
 
 	return supInfo, nil

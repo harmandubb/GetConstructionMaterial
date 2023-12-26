@@ -119,9 +119,9 @@ func generateInquiryID() (id string) {
 // custInquiry CustomerInquiry struct --> Retruns what ever infromation is present for the customer in quiry so far
 // Error if present
 
-func ReadCustomerInquiry(tableName string, inquiryID string) (custInquiry CustomerInquiry, err error) {
+func ReadCustomerInquiry(p *pgxpool.Pool, tableName string, inquiryID string) (custInquiry CustomerInquiry, err error) {
 	sqlString := fmt.Sprintf("SELECT * FROM %s WHERE inquiry_id = '%s'", tableName, inquiryID)
-	rows, err := dataBaseRead(sqlString)
+	rows, err := dataBaseRead(p, sqlString)
 	if err != nil {
 		return CustomerInquiry{}, err
 	}

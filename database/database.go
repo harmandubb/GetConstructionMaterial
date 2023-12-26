@@ -75,9 +75,7 @@ func CheckDataBase(database string) (tableName string) {
 // Return:
 // pgx.Rows --> infromation in a row style for the result of the sqlString prompt
 // Errors if present
-func dataBaseRead(sqlString string) (pgx.Rows, error) {
-	p := ConnectToDataBase("mynewdatabase")
-
+func dataBaseRead(p *pgxpool.Pool, sqlString string) (pgx.Rows, error) {
 	rows, err := p.Query(context.Background(), sqlString) //returns a pointer to where rows are
 	if err != nil {
 		return rows, err

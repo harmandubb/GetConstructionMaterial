@@ -195,7 +195,7 @@ func Idle() {
 			// catigorizationTemplate := os.Getenv("CATIGORIZATION_TEMPLATE")
 			// emailTemplate := os.Getenv("EMAIL_TEMPLATE")
 
-			go api.ProcessCustomerInquiry(inquiryID, catigorizationTemplate, emailTemplate)
+			go api.ProcessCustomerInquiry(p, inquiryID, catigorizationTemplate, emailTemplate)
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
