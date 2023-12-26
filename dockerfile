@@ -24,8 +24,6 @@ RUN go mod download
 # COPY ./Database ./Database
 # COPY ./GPT ./GPT
 
-COPY . .
-
 # # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o myapp
 
