@@ -4,9 +4,13 @@ import (
 	api "docstruction/getconstructionmaterial/API"
 	_ "docstruction/getconstructionmaterial/GCalls"
 	server "docstruction/getconstructionmaterial/Server"
+	"fmt"
 )
 
 func main() {
-	api.RefreshPushNotificationWatch()
+	err := api.RefreshPushNotificationWatch()
+	if err != nil {
+		fmt.Printf("Push Notification Refresh Error: %v", err)
+	}
 	server.Idle()
 }

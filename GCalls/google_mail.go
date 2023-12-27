@@ -184,8 +184,8 @@ func publish(w io.Writer, projectID, topicID, msg string) error {
 // Parameters:
 // srv *gmail.Service --> connection to the gmail api service
 // Return:
-// NON
-func WatchPushNotification(srv *gmail.Service) {
+// Error if present
+func WatchPushNotification(srv *gmail.Service) (err error) {
 	user_srv := gmail.NewUsersService(srv)
 
 	watchRequest := gmail.WatchRequest{
@@ -194,7 +194,12 @@ func WatchPushNotification(srv *gmail.Service) {
 		TopicName:           "projects/getconstructionmaterial/topics/getconstructionmaterial-topic",
 	}
 
-	user_srv.Watch("info@docstruction.com", &watchRequest)
+	_, err = user_srv.Watch("info@docstruction.com", &watchRequest).Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 }
 
