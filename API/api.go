@@ -205,5 +205,5 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 func RefreshPushNotificationWatch() {
 	srv := g.ConnectToGmailAPI()
 	g.WatchPushNotification(srv)
-	fmt.Println("Refreshed PUsh Notification")
+	fmt.Println("Refreshed Push Notification")
 }

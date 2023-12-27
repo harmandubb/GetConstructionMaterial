@@ -206,6 +206,12 @@ func Idle() {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+
+		// Write an HTTP 200 OK status
+		w.WriteHeader(http.StatusOK)
+
+		// Send a response body
+		w.Write([]byte("OK"))
 	})
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe("0.0.0.0:8080", nil)
