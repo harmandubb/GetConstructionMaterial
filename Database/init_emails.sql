@@ -7,7 +7,7 @@ CREATE TABLE emails(
     id SERIAL PRIMARY KEY,
     inquiry_id VARCHAR(36),
     client_email VARCHAR(255) NOT NULL, 
-    time_sent  TIMESTAMP NOT NULL,
+    time_sent  TIMESTAMP WITH TIME ZONE NOT NULL,
     material   VARCHAR(255),
     supplier_map_id VARCHAR(255),
     supplier_name VARCHAR(255),

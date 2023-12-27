@@ -7,7 +7,7 @@ CREATE TABLE customer_inquiry(
     id SERIAL PRIMARY KEY,
     inquiry_id VARCHAR(36),
     email VARCHAR(255) NOT NULL, 
-    time_inquired  TIMESTAMP NOT NULL,
+    time_inquired  TIMESTAMP WITH TIME ZONE NOT NULL,
     material   VARCHAR(255),
     loc VARCHAR(255),
     present BOOLEAN,
