@@ -27,6 +27,7 @@ func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, 
 	// use the inquiry id to get the row of information in the database
 	custInquiry, err := d.ReadCustomerInquiry(p, os.Getenv("CUSTOMER_INQUIRY_TABLE"), inquiryID)
 	if err != nil {
+		log.Printf("Error in Reading Customer Inquiry Table: %v", err)
 		return err
 	}
 
@@ -40,6 +41,7 @@ func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, 
 
 	suppInfo, err := ContactSupplierForMaterial(srv, matForm, catigorizationTemplate, emailTemplate)
 	if err != nil {
+		log.Printf("Error in Contacting Suppliers: %v", err)
 		return err
 	}
 
@@ -49,6 +51,7 @@ func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, 
 		emails = append(emails, s.Email[0])
 		err = d.AddBlankEmailInquiryEntry(p, inquiryID, matForm.Email, matForm.Material, s, true, "emails")
 		if err != nil {
+			log.Printf("Error in Addting a Email Sent to Table: %v", err)
 			fmt.Println("Failed to added email sent into database. ")
 		}
 	}
