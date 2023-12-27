@@ -149,20 +149,27 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	//Get the supplier emails from the info that is found
 	var filteredSuppliers []g.SupplierInfo // Assuming SupplierInfo is the type of your slice elements
 
+	counter := 0
 	for _, supInfo := range supplierInfo {
-		email, err := w.FindSupplierContactEmail(supInfo.Website)
-		if err != nil {
-			log.Printf("Supplier Email Get Error: %v", err) // Log the error, but don't stop the entire process
-			continue                                        // Skip this supplier and continue with the next one
+		if counter < SUPPLIERCONTACTLIMIT+2 {
+			email, err := w.FindSupplierContactEmail(supInfo.Website)
+			if err != nil {
+				log.Printf("Supplier Email Get Error: %v", err) // Log the error, but don't stop the entire process
+				continue                                        // Skip this supplier and continue with the next one
+			} else {
+				supInfo.Email = email
+				filteredSuppliers = append(filteredSuppliers, supInfo) // Add to the new slice
+			}
 		} else {
-			supInfo.Email = email
-			filteredSuppliers = append(filteredSuppliers, supInfo) // Add to the new slice
+			break
 		}
 	}
 
+	fmt.Println("FilteredSuppliers: ", len(filteredSuppliers))
+
 	supplierInfo = nil //Setting to nil so the memory allocatin is lower.
 
-	counter := 0
+	counter = 0
 
 	var emailsSentTo []g.SupplierInfo
 
