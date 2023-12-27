@@ -200,3 +200,9 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 
 	return emailsSentTo, nil
 }
+
+// Purpose: Provides a simple function that is called to refresh the push notification service atleast once perday
+func RefreshPushNotificationWatch() {
+	srv := g.ConnectToGmailAPI()
+	g.WatchPushNotification(srv)
+}

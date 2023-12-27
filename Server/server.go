@@ -44,10 +44,11 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 
 	// List of allowed origins
 	allowedOrigins := map[string]bool{
-		"https://www.docstruction.com":            true,
-		"https://www.getconstructionmaterial.com": true,
-		"https://docstruction.com":                true,
-		"https://getconstructionmaterial.com":     true,
+		"https://www.docstruction.com":                                            true,
+		"https://www.getconstructionmaterial.com":                                 true,
+		"https://docstruction.com":                                                true,
+		"https://getconstructionmaterial.com":                                     true,
+		"getconstructionmaterial@getconstructionmaterial.iam.gserviceaccount.com": true,
 	}
 
 	fmt.Println("Origin Request:", origin)
@@ -192,6 +193,18 @@ func Idle() {
 			}
 
 			w.Write(jsonResp)
+		}
+	})
+
+	http.HandleFunc("/emailNotification", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("New Email Received")
+
+		setCORS(w, r)
+
+		// Handle OPTIONS for preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
 		}
 	})
 	log.Println("Server is starting on port 8080...")

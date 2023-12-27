@@ -31,3 +31,8 @@ func TestGetLatestUnreadMessage(t *testing.T) {
 
 	fmt.Println(emailInfo)
 }
+
+func TestWatchPushNotification(t *testing.T) {
+	srv := ConnectToGmailAPI()
+	WatchPushNotification(srv)
+}
