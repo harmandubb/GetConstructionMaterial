@@ -213,3 +213,24 @@ func RefreshPushNotificationWatch() (err error) {
 	fmt.Println("Refreshed Push Notification")
 	return nil
 }
+
+// Purpose: go thorugh all unread emails and process them to see what the outcome of the exchange was and update the database accordingly
+// Parameters:
+// srv *gmail.Service --> pointer to the establish gmail api service
+// user string --> user email that you want to check the unread messages of
+// Return:
+// Error if present
+func AddressPushNotification(srv *gmail.Service, user string) (err error) {
+	messages, err := g.GetUnreadMessagesData(srv, user)
+	if err != nil {
+		return err
+	}
+
+	// implement concourrency tools here
+
+	for _, message := range messages.Messages {
+
+	}
+
+	return nil
+}

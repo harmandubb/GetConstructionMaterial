@@ -237,33 +237,39 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 
 }
 
-// Purpose: Check the most recent unread message
+// Purpose: get a list of the unread messages in the mail box
+// Parameters:
+// srv *gmail.Service --> gmail api access service pointer
+// user string --> user email that you are checking for the messages
+// Return:
+// r *gmail.ListMessagesResponse --> list of undread message data
+// Error if any present
+func GetUnreadMessagesData(srv *gmail.Service, user string) (r *gmail.ListMessagesResponse, err error) {
+	queryString := "In:inbox and Is:unread"
+
+	r, err = srv.Users.Messages.List(user).Q(queryString).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+// Purpose: Get the contents of any message (intent is to be used to get the unread messages)
 // Parmeters:
 // srv *gmail.Service --> Gmail service access
+// msg *gmail.Message --> gmail style metadata associated with the particular unreadMessage
 // Return:
 // emailINfo EmailInfo --> Struct to store the desired infromation from an email
 // msgID string --> gmail api id that is used to get more informaiton around the email including attachement info
 // error if present
-func GetLatestUnreadMessage(srv *gmail.Service) (emailInfo EmailInfo, msgID string, err error) {
-	user := "me"
-
-	queryString := "In:inbox and Is:unread"
-
-	var empty EmailInfo
-
-	r, err := srv.Users.Messages.List(user).Q(queryString).Do()
+func GetMessage(srv *gmail.Service, msg *gmail.Message, user string) (emailInfo EmailInfo, msgID string, err error) {
+	msgData, err := srv.Users.Messages.Get(user, msg.Id).Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve messages: %v", err)
+		return EmailInfo{}, "", err
 	}
 
-	msgID = r.Messages[0].Id
-
-	msg, err := srv.Users.Messages.Get(user, msgID).Do()
-	if err != nil {
-		return empty, "", err
-	}
-
-	headers := msg.Payload.Headers // Check how the header structure looks like
+	headers := msgData.Payload.Headers // Check how the header structure looks like
 
 	var subj, from, currentHeader string
 	var body []byte
@@ -301,14 +307,14 @@ func GetLatestUnreadMessage(srv *gmail.Service) (emailInfo EmailInfo, msgID stri
 	}
 	if part.Filename != "" && part.Body.AttachmentId != "" {
 
-		attachment, err := srv.Users.Messages.Attachments.Get(user, msgID, part.Body.AttachmentId).Do()
+		attachment, err := srv.Users.Messages.Attachments.Get(user, msg.Id, part.Body.AttachmentId).Do()
 		if err != nil {
-			return empty, "", err
+			return EmailInfo{}, "", err
 		}
 
 		data, err := base64.URLEncoding.DecodeString(attachment.Data)
 		if err != nil {
-			return empty, "", err
+			return EmailInfo{}, "", err
 		}
 
 		// Save the attachment
@@ -329,9 +335,15 @@ func GetLatestUnreadMessage(srv *gmail.Service) (emailInfo EmailInfo, msgID stri
 		attachments: attachementsLocations,
 	}
 
-	return emailInfo, msgID, nil
+	return emailInfo, msg.Id, nil
 
 }
+
+// Purpose: The email body rep containes the original email sent below a tag. That is removed before chat gpt analysis
+// Parameters:
+// body string --> message body as is from the gmail api call
+// Return:
+// trimmedBody string --> Message without the original message.
 
 func trimOriginalMessage(body string) (trimmedBody string) {
 	trimmedBody = body[:strings.Index(body, "-----Original Message-----")]
