@@ -12,8 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/joho/godotenv"
 )
 
 type EmailOptions struct {
@@ -38,10 +36,10 @@ type EmailProductInfo struct {
 }
 
 func SendEmail(body string, subj string, toEmail string) error {
-	err := godotenv.Load()
-	if err != nil {
-		return err
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Import the email vairables
 	originEmail := os.Getenv("EMAIL")
