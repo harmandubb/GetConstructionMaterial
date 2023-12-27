@@ -1,146 +1,14 @@
 package api
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
-	"net"
-	"net/mail"
-	"net/smtp"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-type EmailOptions struct {
-	OriginEmail string
-	Password    string
-	ToEmail     string
-	Subj        string
-	Body        string
-}
-
-type EmailContents struct {
-	Product     string
-	SalesPerson string
-	CompanyName string
-}
-
-type EmailProductInfo struct {
-	Present    bool
-	Price      float64
-	Currency   string
-	Data_Sheet bool
-}
-
-func SendEmail(body string, subj string, toEmail string) error {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// Import the email vairables
-	originEmail := os.Getenv("EMAIL")
-	password := os.Getenv("APPPASSWORD")
-
-	from := mail.Address{"", originEmail}
-	to := mail.Address{"", toEmail}
-
-	// Setup headers
-	headers := make(map[string]string) //creates an emptry map (dictionary that can be populated)
-	headers["From"] = from.String()
-	headers["To"] = to.String()
-	headers["Subject"] = subj
-
-	// Setup message
-	message := ""
-	for k, v := range headers {
-		message += fmt.Sprintf("%s: %s\r\n", k, v)
-	}
-	message += "\r\n" + body
-
-	//Connect to the remote SMTP server
-	servername := "smtp.gmail.com:587"
-	host, _, _ := net.SplitHostPort(servername)
-
-	auth := smtp.PlainAuth("", originEmail, password, host)
-
-	// TLS Config
-	tlsconfig := &tls.Config{
-		InsecureSkipVerify: true, //TODO:This should be changed for production implementation
-		ServerName:         host,
-	}
-
-	c, err := smtp.Dial(servername)
-	if err != nil {
-		return err
-	}
-
-	c.StartTLS(tlsconfig)
-
-	// Auth
-	if err = c.Auth(auth); err != nil {
-		return err
-	}
-
-	// Set the sender and recipient first
-	if err := c.Mail(originEmail); err != nil {
-		return err
-	}
-
-	if err := c.Rcpt(toEmail); err != nil {
-		return err
-	}
-
-	w, err := c.Data()
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Write([]byte(message))
-	if err != nil {
-		return err
-	}
-
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-
-	// Send the QUIT command and close the connection.
-	err = c.Quit()
-	if err != nil {
-		return err
-	}
-
-	return nil
-
-}
-
-func createEmailRequestPrompt(promptTemplatePath string, salesPersonName string, companyName string, product string) (string, error) {
-	file, err := os.Open(promptTemplatePath)
-	if err != nil {
-		return "", err
-	}
-
-	emailByte, err := io.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
-
-	emailString := string(emailByte)
-
-	if salesPersonName == "" {
-		salesPersonName = "the sales team"
-	}
-
-	prompt := fmt.Sprintf(emailString, salesPersonName, companyName, product)
-
-	return prompt, nil
-
-}
 
 func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body string) (string, error) {
 	file, err := os.Open(receiveAnalysisTemplatePath)
@@ -181,56 +49,34 @@ func parseGPTEmailResponse(gptResponse string) (string, string, error) {
 
 }
 
-func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
-	// // if present is avialable then we will continue the struct
-	var emailProductInfo EmailProductInfo
+// func parseGPTAnalysisResponse(gptResponse string) (EmailProductInfo, error) {
+// 	// // if present is avialable then we will continue the struct
+// 	var emailProductInfo EmailProductInfo
 
-	gptResponse = strings.ToLower(gptResponse)
+// 	gptResponse = strings.ToLower(gptResponse)
 
-	present := gptAnalysisPresent(gptResponse)
+// 	present := gptAnalysisPresent(gptResponse)
 
-	emailProductInfo.Present = present
+// 	emailProductInfo.Present = present
 
-	if !present {
-		emailProductInfo.Currency = ""
-		emailProductInfo.Data_Sheet = false
-		emailProductInfo.Price = 0
+// 	if !present {
+// 		emailProductInfo.Currency = ""
+// 		emailProductInfo.Data_Sheet = false
+// 		emailProductInfo.Price = 0
 
-		return emailProductInfo, nil
-	}
+// 		return emailProductInfo, nil
+// 	}
 
-	price, currency := gptAnalysisPrice(gptResponse)
-	emailProductInfo.Price = price
-	emailProductInfo.Currency = currency
+// 	price, currency := gptAnalysisPrice(gptResponse)
+// 	emailProductInfo.Price = price
+// 	emailProductInfo.Currency = currency
 
-	datasheet := gptAnalysisDataSheet(gptResponse)
-	emailProductInfo.Data_Sheet = datasheet
+// 	datasheet := gptAnalysisDataSheet(gptResponse)
+// 	emailProductInfo.Data_Sheet = datasheet
 
-	return emailProductInfo, nil
+// 	return emailProductInfo, nil
 
-}
-
-func gptAnalysisPresent(str string) bool {
-
-	re := regexp.MustCompile(`present: ([yn])`)
-	matches := re.FindStringSubmatch(str)
-
-	if len(matches) > 1 {
-		presentValue := matches[1]
-
-		switch presentValue {
-		case "y":
-			return true
-		case "n":
-			return false
-		default:
-			return false
-		}
-	} else {
-		fmt.Println("Pattern not found")
-		return false
-	}
-}
+// }
 
 func gptAnalysisPrice(str string) (float64, string) {
 	// Regular expression to find a pattern like "6.16 CAD"

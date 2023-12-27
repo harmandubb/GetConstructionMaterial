@@ -146,14 +146,14 @@ func rawMessage(msg string, headers map[string]string) string {
 
 }
 
-// Purpose: test function to test the publish subscription functionality in good api for push notifcation testing
+// Purpose: test function to test the publish subscription functionality in google api for push notifcation testing
 // Parameters:
 //
 //	w io.Writier --> Could not figure out in the time of writing
 //	projectID string --> Google api related parmater
 //	topicID string --> Google api related parameter, speciifc topic you want to send something to
 //	msg string --> what you want to publish to the topic
-
+//
 // Return: error if there are any
 func publish(w io.Writer, projectID, topicID, msg string) error {
 	projectID = "getconstructionmaterial"
@@ -178,6 +178,24 @@ func publish(w io.Writer, projectID, topicID, msg string) error {
 	}
 	fmt.Fprintf(w, "Published a message; msg ID: %v\n", id)
 	return nil
+}
+
+// Purpose: request that the watch is enabled on the particular email that you want to received push notifications for
+// Parameters:
+// srv *gmail.Service --> connection to the gmail api service
+// Return:
+// NON
+func WatchPushNotification(srv *gmail.Service) {
+	user_srv := gmail.NewUsersService(srv)
+
+	watchRequest := gmail.WatchRequest{
+		LabelFilterBehavior: "include",
+		LabelIds:            []string{"INBOX"},
+		TopicName:           "projects/getconstructionmaterial/topics/getconstructionmaterial-topic",
+	}
+
+	user_srv.Watch("info@docstruction.com", &watchRequest)
+
 }
 
 func checkMessage(srv *gmail.Service, subj string, loc string, body string) (bool, error) {
