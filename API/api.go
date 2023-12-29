@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	d "docstruction/getconstructionmaterial/Database"
 	g "docstruction/getconstructionmaterial/GCalls"
@@ -60,6 +61,45 @@ func ProcessCustomerInquiry(p *pgxpool.Pool, inquiryID, catigorizationTemplate, 
 
 	return nil
 
+}
+
+func ConcurrentProcessCustomerInquiry(wg *sync.WaitGroup, errStream chan<- error, srv *gmail.Service, p *pgxpool.Pool, inquiryID, catigorizationTemplate, emailTemplate string) {
+	defer wg.Done()
+	// use the inquiry id to get the row of information in the database
+	custInquiry, err := d.ReadCustomerInquiry(p, os.Getenv("CUSTOMER_INQUIRY_TABLE"), inquiryID)
+	if err != nil {
+		log.Printf("Error in Reading Customer Inquiry Table: %v", err)
+		errStream <- err
+		return
+	}
+
+	matForm := g.MaterialFormInfo{
+		Email:    custInquiry.Email,
+		Material: custInquiry.Material,
+		Loc:      custInquiry.Loc,
+	}
+
+	suppInfo, err := ContactSupplierForMaterial(srv, matForm, catigorizationTemplate, emailTemplate)
+	if err != nil {
+		log.Printf("Error in Contacting Suppliers: %v", err)
+		errStream <- err
+		return
+	}
+
+	var emails []string
+
+	for _, s := range suppInfo {
+		emails = append(emails, s.Email[0])
+		err = d.AddBlankEmailInquiryEntry(p, inquiryID, matForm.Email, matForm.Material, s, true, "emails")
+		if err != nil {
+			log.Printf("Error in Addting a Email Sent to Table: %v", err)
+			fmt.Println("Failed to added email sent into database. ")
+			errStream <- err
+			return
+		}
+	}
+
+	AlertAdmin(srv, matForm, emails)
 }
 
 // Purpose: Send en email to the admin about th erequest that has come in and what supplier (emails) are used to contact for th erequest

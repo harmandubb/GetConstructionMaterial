@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	api "docstruction/getconstructionmaterial/API"
 	d "docstruction/getconstructionmaterial/Database"
 	g "docstruction/getconstructionmaterial/GCalls"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/api/gmail/v1"
 )
 
 type EmailFormInfo struct {
@@ -167,32 +169,74 @@ func Idle() {
 				return
 			}
 
-			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8"
-
-			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
-
 			dataBaseConnectionPool := &sync.Pool{
 				New: func() interface{} {
 					return d.ConnectToDataBase(os.Getenv("DB_NAME"))
 				},
 			}
 
+			gmailServicePool := sync.Pool{
+				New: func() interface{} {
+					return g.ConnectToGmailAPI()
+				},
+			}
+
 			p := dataBaseConnectionPool.Get().(*pgxpool.Pool)
 			defer dataBaseConnectionPool.Put(p)
 
-			inquiryID, err := d.AddBlankCustomerInquiry(p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE")) // can make this function run concurrenctly
-			if err != nil {
-				log.Fatalf("Error when adding customer inquiry to database: %v", err)
-			}
+			errStream := make(chan error)
+			inquiryIDStream := make(chan string)
+
+			ctx, cancel := context.WithCancel(context.Background())
+
+			go d.ConcurrentAddBlankCustomerInquiry(inquiryIDStream, errStream, ctx, p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE"))
+
+			//save result in the spread sheet for a back up
+			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8"
+
+			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
 
 			resp := ServerResponse{
 				Success: result,
 			}
 
+			var inquiryID string
+
+			// Want to assess what the outcome of the of the blacnk add of the customer inquiry looks like
+			select {
+			//error stream is full
+			case err := <-errStream:
+				fmt.Println("Error Occured when making a entry of the inquiry: %v", err)
+				w.WriteHeader(http.StatusExpectationFailed)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			//uniqueID is present
+			case inquiryID = <-inquiryIDStream:
+
+			case <-time.After(5 * time.Second):
+				cancel()
+				fmt.Println("Adding blank inquiry has timed out")
+				w.WriteHeader(http.StatusExpectationFailed)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			close(errStream)
+			close(inquiryIDStream)
+
+			errStream = make(chan error)
+
+			// TODO: How should the cancelling of the goroutine occur and under what circumstances.
+
 			// catigorizationTemplate := os.Getenv("CATIGORIZATION_TEMPLATE")
 			// emailTemplate := os.Getenv("EMAIL_TEMPLATE")
+			var wg sync.WaitGroup
+			wg.Add(1)
 
-			go api.ProcessCustomerInquiry(p, inquiryID, catigorizationTemplate, emailTemplate) //% 100 make this concurrent since the response for this doesn't matter but just runs our process
+			srv := gmailServicePool.Get().(*gmail.Service)
+			defer gmailServicePool.Put(srv)
+
+			go api.ConcurrentProcessCustomerInquiry(&wg, errStream, srv, p, inquiryID, catigorizationTemplate, emailTemplate)
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
@@ -202,6 +246,9 @@ func Idle() {
 			}
 
 			w.Write(jsonResp)
+
+			wg.Wait() //Wait for the Customer Inquiry process to finish for this thread to move onto another problem.
+
 		}
 	})
 

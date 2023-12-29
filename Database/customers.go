@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	g "docstruction/getconstructionmaterial/GCalls"
 
 	"fmt"
@@ -44,6 +45,31 @@ func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, tableN
 
 	// Implement the read for this test
 	return inquiryID, nil
+}
+
+func ConcurrentAddBlankCustomerInquiry(inquiryIDStream chan<- string, errStream chan<- error, ctx context.Context,
+	p *pgxpool.Pool, matForm g.MaterialFormInfo, tableName string) {
+
+	select {
+	case <-ctx.Done():
+		//The context has been canncelled
+		errStream <- ctx.Err()
+		return
+
+	default:
+		sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)", tableName)
+
+		inquiryID := generateInquiryID()
+
+		err := dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, 0, "", nil)
+		if err != nil {
+			errStream <- err
+			return
+		}
+
+		inquiryIDStream <- inquiryID
+	}
+
 }
 
 // Purpose: update the customer inquiry row given a customer email
