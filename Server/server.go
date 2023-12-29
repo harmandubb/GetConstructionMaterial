@@ -13,7 +13,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type EmailFormInfo struct {
@@ -146,7 +149,6 @@ func Idle() {
 		}
 
 		if r.Method == http.MethodPost {
-			fmt.Println("In the post")
 			w.Header().Set("Content-Type", "application/json")
 
 			body, err := io.ReadAll(r.Body)
@@ -165,13 +167,20 @@ func Idle() {
 				return
 			}
 
-			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8" //could make the storing of the id better. //Need to have the spread sheet id for the material form
+			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8"
 
 			result := g.SendMaterialFormInfo(spreadsheetID, materialFormInfo)
 
-			p := d.ConnectToDataBase(os.Getenv("DB_NAME")) //need to set this in a environmental variabl
+			dataBaseConnectionPool := &sync.Pool{
+				New: func() interface{} {
+					return d.ConnectToDataBase(os.Getenv("DB_NAME"))
+				},
+			}
 
-			inquiryID, err := d.AddBlankCustomerInquiry(p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE"))
+			p := dataBaseConnectionPool.Get().(*pgxpool.Pool)
+			defer dataBaseConnectionPool.Put(p)
+
+			inquiryID, err := d.AddBlankCustomerInquiry(p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE")) // can make this function run concurrenctly
 			if err != nil {
 				log.Fatalf("Error when adding customer inquiry to database: %v", err)
 			}
@@ -183,7 +192,7 @@ func Idle() {
 			// catigorizationTemplate := os.Getenv("CATIGORIZATION_TEMPLATE")
 			// emailTemplate := os.Getenv("EMAIL_TEMPLATE")
 
-			go api.ProcessCustomerInquiry(p, inquiryID, catigorizationTemplate, emailTemplate)
+			go api.ProcessCustomerInquiry(p, inquiryID, catigorizationTemplate, emailTemplate) //% 100 make this concurrent since the response for this doesn't matter but just runs our process
 
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
