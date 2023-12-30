@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"google.golang.org/api/gmail/v1"
 )
 
@@ -54,14 +55,15 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 		"https://docstruction.com":                                                true,
 		"https://getconstructionmaterial.com":                                     true,
 		"getconstructionmaterial@getconstructionmaterial.iam.gserviceaccount.com": true,
+		"https://localhost":                                                       true,
 	}
 
-	fmt.Println("Origin Request:", origin)
-	fmt.Println("Server present:", allowedOrigins[origin])
+	// fmt.Println("Origin Request:", origin)
+	// fmt.Println("Server present:", allowedOrigins[origin])
 
 	_, ok := allowedOrigins[origin]
 
-	fmt.Print("OK:", ok)
+	fmt.Println("OK: ", ok)
 
 	if _, ok := allowedOrigins[origin]; ok {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -126,7 +128,9 @@ func Idle() {
 			if err != nil {
 				w.WriteHeader(http.StatusExpectationFailed)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
-				fmt.Println(err)
+				fmt.Println("ABOUT TO FAIL", err)
+
+				time.Sleep(5 * time.Second)
 				return
 			}
 
@@ -138,10 +142,10 @@ func Idle() {
 	http.HandleFunc("/materialForm", func(w http.ResponseWriter, r *http.Request) {
 		setCORS(w, r)
 
-		// err := godotenv.Load()
-		// if err != nil {
-		// 	log.Fatalf("Error loading .env file: %v", err)
-		// }
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("Error loading .env file: %v", err)
+		}
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {
@@ -206,18 +210,24 @@ func Idle() {
 			select {
 			//error stream is full
 			case err := <-errStream:
-				fmt.Println("Error Occured when making a entry of the inquiry: %v", err)
+				fmt.Printf("Error Occured when making a entry of the inquiry: %v\n", err)
 				w.WriteHeader(http.StatusExpectationFailed)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				fmt.Println("ABOUT TO FAIL", err)
+
+				time.Sleep(5 * time.Second)
 				return
 			//uniqueID is present
 			case inquiryID = <-inquiryIDStream:
 
-			case <-time.After(5 * time.Second):
+			case <-time.After(30 * time.Second):
 				cancel()
 				fmt.Println("Adding blank inquiry has timed out")
 				w.WriteHeader(http.StatusExpectationFailed)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				fmt.Println("ABOUT TO FAIL", err)
+
+				time.Sleep(5 * time.Second)
 				return
 			}
 
@@ -238,10 +248,17 @@ func Idle() {
 
 			go api.ConcurrentProcessCustomerInquiry(&wg, errStream, srv, p, inquiryID, catigorizationTemplate, emailTemplate)
 
+			fmt.Println("---------------------------")
+			fmt.Println("RESPONSE TO SHOW IS:", resp)
 			jsonResp, err := json.Marshal(resp)
 			if err != nil {
+				fmt.Println("Error with JSONResponse")
+				fmt.Println("Input is resp:", resp)
 				w.WriteHeader(http.StatusExpectationFailed)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				fmt.Println("ABOUT TO FAIL", err)
+
+				time.Sleep(5 * time.Second)
 				return
 			}
 

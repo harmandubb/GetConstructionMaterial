@@ -94,6 +94,7 @@ func isValidWebsite(u string) bool {
 }
 
 func FindContactURLOnPage(page string) ([]string, error) {
+	fmt.Println("In the Find Contract URL on Page function")
 	c := colly.NewCollector()
 
 	// Define a slice to store contact links

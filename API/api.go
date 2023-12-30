@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	d "docstruction/getconstructionmaterial/Database"
 	g "docstruction/getconstructionmaterial/GCalls"
@@ -100,6 +101,7 @@ func ConcurrentProcessCustomerInquiry(wg *sync.WaitGroup, errStream chan<- error
 	}
 
 	AlertAdmin(srv, matForm, emails)
+	fmt.Println("Done Work")
 }
 
 // Purpose: Send en email to the admin about th erequest that has come in and what supplier (emails) are used to contact for th erequest
@@ -155,6 +157,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	catergory, err := gpt.PromptGPTMaterialCatogorization(catigorizationTemplate, matInfo.Material)
 	if err != nil {
 		log.Fatalf("Catogirization Error: %v", err)
+		time.Sleep(5 * time.Second)
 		return []g.SupplierInfo{}, err
 	}
 
@@ -162,6 +165,8 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	c, err := g.GetMapsClient()
 	if err != nil {
 		log.Fatalf("Map Client Connection Error: %v", err)
+		time.Sleep(5 * time.Second)
+
 		return []g.SupplierInfo{}, err
 	}
 
@@ -169,12 +174,16 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Loc)
 	if err != nil {
 		log.Fatalf("Geocoding Converstion Error: %v", err)
+		time.Sleep(5 * time.Second)
+
 		return []g.SupplierInfo{}, err
 	}
 
 	searchResp, err := g.SearchSuppliers(c, catergory, &geometry.Location)
 	if err != nil {
 		log.Fatalf("Map Search Supplier Error: %v", err)
+		time.Sleep(5 * time.Second)
+
 		return []g.SupplierInfo{}, err
 	}
 
@@ -194,8 +203,8 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 		if counter < SUPPLIERCONTACTLIMIT+2 {
 			email, err := w.FindSupplierContactEmail(supInfo.Website)
 			if err != nil {
-				log.Printf("Supplier Email Get Error: %v", err) // Log the error, but don't stop the entire process
-				continue                                        // Skip this supplier and continue with the next one
+				// log.Printf("Supplier Email Get Error: %v", err)  // Log the error, but don't stop the entire process
+				continue // Skip this supplier and continue with the next one
 			} else {
 				supInfo.Email = email
 				filteredSuppliers = append(filteredSuppliers, supInfo) // Add to the new slice
@@ -220,16 +229,21 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 				if w.IsValidEmail(supInfo.Email[0]) {
 					subj, body, err := gpt.CreateEmailToSupplier(emailTemplate, supInfo.Name, matInfo.Material)
 					if err != nil {
-						log.Fatalf("GPT Email Create Error: %v", err)
-						return []g.SupplierInfo{}, err
-					}
+						fmt.Printf("GPT Email Create Error: %v\n", err)
+						continue //What should happen if this error occurs?
+					} else {
 
-					// send the emal to the supplier
-					_, err = g.SendEmail(srv, subj, body, supInfo.Email[0])
-					if err == nil {
-						//email sent successfully
-						emailsSentTo = append(emailsSentTo, supInfo)
-						counter = counter + 1
+						// send the emal to the supplier
+						// _, err = g.SendEmail(srv, subj, body, supInfo.Email[0])
+						_, err = g.SendEmail(srv, subj, body, "harmand1999@gmail.com")
+						if err == nil {
+							//email sent successfully
+							emailsSentTo = append(emailsSentTo, supInfo)
+							counter = counter + 1
+						} else {
+							fmt.Println("Supplier email was not able to send")
+							continue
+						}
 					}
 				}
 			}
@@ -260,17 +274,17 @@ func RefreshPushNotificationWatch() (err error) {
 // user string --> user email that you want to check the unread messages of
 // Return:
 // Error if present
-func AddressPushNotification(srv *gmail.Service, user string) (err error) {
-	messages, err := g.GetUnreadMessagesData(srv, user)
-	if err != nil {
-		return err
-	}
+// func AddressPushNotification(srv *gmail.Service, user string) (err error) {
+// 	messages, err := g.GetUnreadMessagesData(srv, user)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// implement concourrency tools here
+// 	// implement concourrency tools here
 
-	for _, message := range messages.Messages {
+// 	for _, message := range messages.Messages {
 
-	}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

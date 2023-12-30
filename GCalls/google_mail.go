@@ -84,7 +84,7 @@ func SendEmail(srv *gmail.Service, subj, msg, to string) (*gmail.Message, error)
 		return message, err
 	}
 
-	fmt.Printf("Sent Email to: %s", to)
+	fmt.Printf("Sent Email to: %s\n", to)
 
 	return message, nil
 

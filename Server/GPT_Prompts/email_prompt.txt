@@ -1,5 +1,4 @@
 Write me an email to %s at %s, to asks them if they have %s. 
 If they do then ask for a datasheet or any other specification information they can provide including brand, and model. 
-Make sure the tone is natural and informal. The email should be concise. 
-The closing should be a simple Thanks, Harry
+Make sure the tone is natural and informal. The email should be concise and is being sent to an external supplier.
 Include in the subject line: Docstruction: %s - and then the inquiry that is being made
