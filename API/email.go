@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body string) (string, error) {
+func CreateReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body string) (string, error) {
 	file, err := os.Open(receiveAnalysisTemplatePath)
 	if err != nil {
 		return "", err

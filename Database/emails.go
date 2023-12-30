@@ -101,3 +101,36 @@ func ReadEmailInquiryEntry(p *pgxpool.Pool, tableName string, inquiryID string) 
 	return emailInquiry, nil
 
 }
+
+func UpdateEmailInquiryEntryPresent(p *pgxpool.Pool, inquiry_id, tableName string, present bool) (err error) {
+	sqlString := fmt.Sprintf("UPDATE %s SET present=$1 WHERE inquiry_id=$2", tableName)
+
+	err = dataBaseTransmit(p, sqlString, true, inquiry_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateEmailInquiryEntryPrice(p *pgxpool.Pool, inquiry_id, tableName string, price float64, currency string) (err error) {
+	sqlString := fmt.Sprintf("UPDATE %s SET price=$1, currency=$2 WHERE inquiry_id=$3", tableName)
+
+	err = dataBaseTransmit(p, sqlString, price, currency, inquiry_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateEmailInquiryEntryDataSheet(p *pgxpool.Pool, inquiry_id, tableName string, data_sheet *[]byte) (err error) {
+	sqlString := fmt.Sprintf("UPDATE %s SET data_sheet=$1 WHERE inquiry_id=$3", tableName)
+
+	err = dataBaseTransmit(p, sqlString, data_sheet, inquiry_id) //TODO:Check if a pointer to the file is sufficient
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

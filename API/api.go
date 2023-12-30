@@ -274,17 +274,39 @@ func RefreshPushNotificationWatch() (err error) {
 // user string --> user email that you want to check the unread messages of
 // Return:
 // Error if present
-// func AddressPushNotification(srv *gmail.Service, user string) (err error) {
-// 	messages, err := g.GetUnreadMessagesData(srv, user)
-// 	if err != nil {
-// 		return err
-// 	}
+func AddressPushNotification(srv *gmail.Service, user, receiveAnalysisTemplate string) (err error) {
+	//TODO: ensure the input to the function for srv is the pool type to reduce load on the system.
 
-// 	// implement concourrency tools here
+	messages, err := g.GetUnreadMessagesData(srv, user)
+	if err != nil {
+		return err
+	}
 
-// 	for _, message := range messages.Messages {
+	// implement concourrency tools here
+	// Make a different thread read the different unread messages
+	// Create the gpt prompt and send to gpt
+	// break the gpt response into what is in the email.
+	// fill the table as needed
 
-// 	}
+	for _, message := range messages.Messages {
+		// need to make a function (concurrent) that runs through the unread emails to do all of the needed tasks
+		emailInfo, _, err := g.GetMessage(srv, message, user)
+		if err != nil {
+			return err
+		}
 
-// 	return nil
-// }
+		// Need to analize the the email body in chat gpt to see what I should do next
+		presentInfo, err := gpt.PromptGPTReceiveEmailAnalysis(receiveAnalysisTemplate, emailInfo.Body)
+		if err != nil {
+			return err
+		}
+
+		// check if the item is present
+		if presentInfo.Present {
+			// if present then check the fiels that have information 
+			d.
+		}
+	}
+
+	return nil
+}

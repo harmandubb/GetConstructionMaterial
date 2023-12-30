@@ -13,7 +13,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-type EmailMaterialInfo struct {
+type EmailPresentInfo struct {
 	Present    bool
 	Price      float64
 	Currency   string
@@ -243,6 +243,25 @@ func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body s
 
 }
 
+func PromptGPTReceiveEmailAnalysis(receiveAnalysisTemplate string, body string) (presentInfo EmailPresentInfo, err error) {
+	prompt, err := createReceiceEmailAnalysisPrompt(receiveAnalysisTemplate, body)
+	if err != nil {
+		return EmailPresentInfo{}, err
+	}
+
+	resp, err := promptGPT(prompt)
+	if err != nil {
+		return EmailPresentInfo{}, err
+	}
+
+	presentInfo, err = parseGPTAnalysisMaterialResponse(resp)
+	if err != nil {
+		return EmailPresentInfo{}, err
+	}
+
+	return presentInfo, nil
+}
+
 // Purpose: Breaks the subject and the body from the gpt response that is used in sending out an email
 // Parameter:
 // gptResponse string --> response form gpt that is the subject and body for the email to be written
@@ -270,9 +289,9 @@ func parseGPTEmailResponse(gptResponse string) (subj string, body string, err er
 
 }
 
-func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailMaterialInfo, error) {
+func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailPresentInfo, error) {
 	// // if present is avialable then we will continue the struct
-	var emailProductInfo EmailMaterialInfo
+	var emailProductInfo EmailPresentInfo
 
 	gptResponse = strings.ToLower(gptResponse)
 
@@ -331,7 +350,7 @@ func gptAnalysisMaterialPresent(presentValue string) bool {
 // Purpose: given a EmailMaterialInfo struct what should I do to response to a user
 // Parameter:
 // emailMaterialInfo struct --> struct that contains the bools that shows certains fields present (price, datasheet)
-func ReactToEmailInfoContents(emailMaterialInfo EmailMaterialInfo) (emailPrompt string, err error) {
+func ReactToEmailInfoContents(emailMaterialInfo EmailPresentInfo) (emailPrompt string, err error) {
 	if emailMaterialInfo.Present {
 		if emailMaterialInfo.Price > 0 {
 
