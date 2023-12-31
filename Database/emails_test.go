@@ -2,6 +2,7 @@ package database
 
 import (
 	g "docstruction/getconstructionmaterial/GCalls"
+	"os"
 
 	"testing"
 
@@ -16,7 +17,7 @@ func TestAddBlankEmailInquiryEntry(t *testing.T) {
 		t.Error(err)
 	}
 
-	supDetail := g.SupplierInfo{
+	supDetail := g.SupplierEmailInfo{
 		MapsID:  "IDTEST",
 		Name:    "SupplierNameTest",
 		Address: "Surrey Place",
@@ -41,7 +42,7 @@ func TestAddBlankEmailInquiryEntry(t *testing.T) {
 		t.Error(err)
 	}
 
-	emailInquiry, err := ReadEmailInquiryEntry(p, "emails", inquiryID)
+	emailInquiry, err := ReadEmailInquiryEntry(p, "emails", IDOption{Inquiry_ID: inquiryID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,4 +98,62 @@ func TestAddBlankEmailInquiryEntry(t *testing.T) {
 	if nil != emailInquiry.Data_Sheet {
 		t.Fail()
 	}
+}
+
+func TestPDFUploadAndDownload(t *testing.T) {
+	p := ConnectToDataBase("mynewdatabase")
+
+	inquiry_id := "TEST_INQUIRY_ID"
+	thread_id := "TEST_THREAD_ID"
+
+	supDetail := g.SupplierEmailInfo{
+		MapsID:  "IDTEST",
+		Name:    "SupplierNameTest",
+		Address: "Surrey Place",
+		Geometry: maps.AddressGeometry{
+			Location: maps.LatLng{
+				Lat: 10.0,
+				Lng: 12.0,
+			},
+			LocationType: "Test",
+		},
+		Website:        "wwww.test.com",
+		Email:          []string{"test@gmail.com"},
+		Email_ThreadID: thread_id,
+	}
+
+	err := AddBlankEmailInquiryEntry(p,
+		inquiry_id,
+		"Test@gmail.com",
+		"Fire Stopping Pipe Collars",
+		supDetail,
+		true,
+		"emails",
+	)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Read in a datasheet in a bte array
+	file, err := os.ReadFile("./Attachment/1.pdf")
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = UpdateEmailInquiryEntryDataSheet(p, inquiry_id, "emails", &file)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// read the file to ensure that the pdf is being processed properly:
+	emailInquiryInfo, err := ReadEmailInquiryEntry(p, "emails", IDOption{Inquiry_ID: inquiry_id})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = os.WriteFile("output.pdf", *emailInquiryInfo.Data_Sheet, 0644)
+	if err != nil {
+		t.Error(err)
+	}
+
 }

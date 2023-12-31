@@ -144,7 +144,7 @@ func AlertAdmin(srv *gmail.Service, matInfo g.MaterialFormInfo, emailsSentTo []s
 // loc *mapts.LatLng --> Google maps struct for holding the llat and lng for the place the user is requesting from.
 // Return:
 // error if any present
-func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) (emailsSentto []g.SupplierInfo, err error) {
+func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, catigorizationTemplate, emailTemplate string) (emailsSentto []g.SupplierEmailInfo, err error) {
 	//Call chat gpt to catigorized the item
 
 	fmt.Printf("Inputted material form info:")
@@ -158,7 +158,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	if err != nil {
 		log.Fatalf("Catogirization Error: %v", err)
 		time.Sleep(5 * time.Second)
-		return []g.SupplierInfo{}, err
+		return []g.SupplierEmailInfo{}, err
 	}
 
 	// Search for near by supplies for the category
@@ -167,7 +167,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 		log.Fatalf("Map Client Connection Error: %v", err)
 		time.Sleep(5 * time.Second)
 
-		return []g.SupplierInfo{}, err
+		return []g.SupplierEmailInfo{}, err
 	}
 
 	//Get Lat and lng coordinates
@@ -176,7 +176,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 		log.Fatalf("Geocoding Converstion Error: %v", err)
 		time.Sleep(5 * time.Second)
 
-		return []g.SupplierInfo{}, err
+		return []g.SupplierEmailInfo{}, err
 	}
 
 	searchResp, err := g.SearchSuppliers(c, catergory, &geometry.Location)
@@ -184,10 +184,10 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 		log.Fatalf("Map Search Supplier Error: %v", err)
 		time.Sleep(5 * time.Second)
 
-		return []g.SupplierInfo{}, err
+		return []g.SupplierEmailInfo{}, err
 	}
 
-	var supplierInfo []g.SupplierInfo
+	var supplierInfo []g.SupplierEmailInfo
 
 	for _, supplier := range searchResp.Results {
 		supplier, _ := g.GetSupplierInfo(c, supplier)
@@ -196,7 +196,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	}
 
 	//Get the supplier emails from the info that is found
-	var filteredSuppliers []g.SupplierInfo // Assuming SupplierInfo is the type of your slice elements
+	var filteredSuppliers []g.SupplierEmailInfo // Assuming SupplierInfo is the type of your slice elements
 
 	counter := 0
 	for _, supInfo := range supplierInfo {
@@ -220,7 +220,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 
 	counter = 0
 
-	var emailsSentTo []g.SupplierInfo
+	var emailsSentTo []g.SupplierEmailInfo
 
 	for _, supInfo := range filteredSuppliers {
 		if counter < SUPPLIERCONTACTLIMIT {
@@ -234,10 +234,11 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 					} else {
 
 						// send the emal to the supplier
-						// _, err = g.SendEmail(srv, subj, body, supInfo.Email[0])
-						_, err = g.SendEmail(srv, subj, body, "harmand1999@gmail.com")
+						// msgDetails, err = g.SendEmail(srv, subj, body, supInfo.Email[0])
+						msgDetails, err := g.SendEmail(srv, subj, body, "harmand1999@gmail.com")
 						if err == nil {
 							//email sent successfully
+							supInfo.Email_ThreadID = msgDetails.ThreadId
 							emailsSentTo = append(emailsSentTo, supInfo)
 							counter = counter + 1
 						} else {
@@ -274,7 +275,7 @@ func RefreshPushNotificationWatch() (err error) {
 // user string --> user email that you want to check the unread messages of
 // Return:
 // Error if present
-func AddressPushNotification(srv *gmail.Service, user, receiveAnalysisTemplate string) (err error) {
+func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveAnalysisTemplate, emailInquiryTableName, customerInquiryTableName string) (err error) {
 	//TODO: ensure the input to the function for srv is the pool type to reduce load on the system.
 
 	messages, err := g.GetUnreadMessagesData(srv, user)
@@ -301,10 +302,44 @@ func AddressPushNotification(srv *gmail.Service, user, receiveAnalysisTemplate s
 			return err
 		}
 
-		// check if the item is present
 		if presentInfo.Present {
-			// if present then check the fiels that have information 
-			d.
+			id_opt := d.IDOption{
+				Thread_ID: message.ThreadId,
+			}
+
+			// find the threadID and use it to pull out the row of information in the inquiry table
+			emailInquiry, err := d.ReadEmailInquiryEntry(p, emailInquiryTableName, id_opt)
+			if err != nil {
+				return err
+			}
+
+			emailInquiry.Present = true
+			emailInquiry.Price = presentInfo.Price
+			emailInquiry.Currency = presentInfo.Currency
+			emailInquiry.Data_Sheet = nil
+			if presentInfo.Data_Sheet {
+				// TODO: get the attachement from the email
+				placeholder := []byte("DataSheetPlaceHolder")
+				emailInquiry.Data_Sheet = &placeholder
+			}
+
+			err = d.UpdateEmailInquiryEntryMaterialPresent(p, emailInquiry.Inquiry_ID, emailInquiryTableName, emailInquiry.Price, emailInquiry.Currency, emailInquiry.Data_Sheet)
+			if err != nil {
+				return err
+			}
+
+			// If present then the data in the main customer inquiry should be compared and changed if this inquiry is better
+			// Read the customer inquiry row into
+			custInquiry, err := d.ReadCustomerInquiry(p, customerInquiryTableName, emailInquiry.Inquiry_ID)
+			if err != nil {
+				return err
+			}
+
+			// TODO: Implement a currency compare mechanism generally.
+			if custInquiry.Price > emailInquiry.Price {
+				// More competative item update
+
+			}
 		}
 	}
 

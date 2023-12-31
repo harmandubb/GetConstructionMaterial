@@ -11,6 +11,7 @@ CREATE TABLE customer_inquiry(
     material   VARCHAR(255),
     loc VARCHAR(255),
     present BOOLEAN,
+    supplier_email_thread_ID VARCHAR(255),
     price NUMERIC(10, 2),
     currency VARCHAR(3),
     data_sheet BYTEA

@@ -12,16 +12,17 @@ import (
 )
 
 type CustomerInquiry struct {
-	ID            int
-	Inquiry_ID    string
-	Email         string
-	Time_Inquired time.Time
-	Material      string
-	Loc           string
-	Present       bool
-	Price         float64
-	Currency      string
-	Data_Sheet    *uint32
+	ID                       int
+	Inquiry_ID               string
+	Email                    string
+	Time_Inquired            time.Time
+	Material                 string
+	Loc                      string
+	Present                  bool
+	Supplier_Email_Thread_ID string //Include the supplier thread ID that has the best overall offering based on price
+	Price                    float64
+	Currency                 string
+	Data_Sheet               *[]uint8
 }
 
 // Purpose: create a customer inquiry row that has all basic info about the user and material filled
@@ -34,19 +35,27 @@ type CustomerInquiry struct {
 // Error if present
 func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, tableName string) (inquiryID string, err error) {
 
-	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)", tableName)
+	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, supplier_email_thread_id, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tableName)
 
 	inquiryID = generateInquiryID()
 
-	err = dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, 0, "", nil)
+	err = dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, "", 0, "", nil)
 	if err != nil {
 		return "", err
 	}
 
-	// Implement the read for this test
 	return inquiryID, nil
+
 }
 
+// Purpose: create a customer inquiry row that has all basic info about the user and material filled
+// Parameters:
+// inquiryIDStream chan<- string : channel to return inquiryID which links all things realted to this inquiry
+// errStream chan<- error: channel for error return
+// ct context.Context: allows for canel of the function to occur due to time exceeded
+// p *pgxpool.Pool --> pool of database connnections (to be made through a pool share in sync package)
+// matForm g.MaterialFormInfo --> struct holding the info inputted by the used
+// tableNmae string --> name of the table that you want to input the data into
 func ConcurrentAddBlankCustomerInquiry(inquiryIDStream chan<- string, errStream chan<- error, ctx context.Context,
 	p *pgxpool.Pool, matForm g.MaterialFormInfo, tableName string) {
 
@@ -57,11 +66,11 @@ func ConcurrentAddBlankCustomerInquiry(inquiryIDStream chan<- string, errStream 
 		return
 
 	default:
-		sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)", tableName)
+		sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, supplier_email_thread_id, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tableName)
 
 		inquiryID := generateInquiryID()
 
-		err := dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, 0, "", nil)
+		err := dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, "", 0, "", nil)
 		if err != nil {
 			errStream <- err
 			return
@@ -83,10 +92,10 @@ func ConcurrentAddBlankCustomerInquiry(inquiryIDStream chan<- string, errStream 
 // Return:
 // Error if any present
 
-func updateCustomerInquiry(p *pgxpool.Pool, database string, tableName string, customerEmail string, col string, val any) (err error) {
-	sqlString := fmt.Sprintf("UPDATE %s SET %s = $1 WHERE email = $2", tableName, col)
+func updateCustomerInquiry(p *pgxpool.Pool, database string, tableName string, inquiry_id string, col string, val any) (err error) {
+	sqlString := fmt.Sprintf("UPDATE %s SET %s = $1 WHERE inquiry_id = $2", tableName, col)
 
-	err = dataBaseTransmit(p, sqlString, database, val, customerEmail)
+	err = dataBaseTransmit(p, sqlString, database, val, inquiry_id)
 	if err != nil {
 		return err
 	}
@@ -94,24 +103,10 @@ func updateCustomerInquiry(p *pgxpool.Pool, database string, tableName string, c
 	return nil
 }
 
-// Purpose: Speciailized version to update Present of customer inquiry given an email
-func updateCustomerInquiryPresent(p *pgxpool.Pool, database string, tableName string, customerEmail string, present bool) (err error) {
-	err = updateCustomerInquiry(p, database, tableName, customerEmail, "present", present)
-	if err != nil {
-		return err
-	}
+func UpdateCustomerInquiryMaterial(p *pgxpool.Pool, tableName string, inquiry_id string, supplier_email_thread_id string, price float64, currency string, Data_Sheet *[]byte) (err error) {
+	sqlString := fmt.Sprintf("UPDATE %s SET present = $1, supplier_email_thread_id = $2, price = $3, currency = $4, data_sheet = $5 WHERE inquiry_id = '%s'", tableName, inquiry_id)
 
-	return nil
-}
-
-// Purpose: Speciailized version to update Price and the currency of customer inquiry given an email
-func updateCustomerInquiryPrice(p *pgxpool.Pool, database string, tableName string, customerEmail string, price float64, currency string) (err error) {
-	err = updateCustomerInquiry(p, database, tableName, customerEmail, "price", price)
-	if err != nil {
-		return err
-	}
-
-	err = updateCustomerInquiry(p, database, tableName, customerEmail, "currency", currency)
+	err = dataBaseTransmit(p, sqlString, true, supplier_email_thread_id, price, currency, Data_Sheet)
 	if err != nil {
 		return err
 	}
@@ -164,6 +159,7 @@ func ReadCustomerInquiry(p *pgxpool.Pool, tableName string, inquiryID string) (c
 			&custInquiry.Material,
 			&custInquiry.Loc,
 			&custInquiry.Present,
+			&custInquiry.Supplier_Email_Thread_ID,
 			&custInquiry.Price,
 			&custInquiry.Currency,
 			&custInquiry.Data_Sheet,

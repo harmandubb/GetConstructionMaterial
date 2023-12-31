@@ -8,13 +8,14 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-type SupplierInfo struct {
-	MapsID   string
-	Name     string
-	Address  string
-	Geometry maps.AddressGeometry
-	Website  string
-	Email    []string
+type SupplierEmailInfo struct {
+	MapsID         string
+	Name           string
+	Address        string
+	Geometry       maps.AddressGeometry
+	Website        string
+	Email          []string
+	Email_ThreadID string
 }
 
 func GetMapsClient() (*maps.Client, error) {
@@ -71,7 +72,7 @@ func SearchSuppliers(c *maps.Client, category string, loc *maps.LatLng) (maps.Pl
 
 }
 
-func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (SupplierInfo, error) {
+func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (SupplierEmailInfo, error) {
 	ctx := context.Background()
 
 	id := placeResult.PlaceID
@@ -87,7 +88,7 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 
 	placeDetailsResp, err := c.PlaceDetails(ctx, &detailsReq)
 	if err != nil {
-		return SupplierInfo{}, err
+		return SupplierEmailInfo{}, err
 	}
 
 	var address string
@@ -98,7 +99,7 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 		address = placeResult.Vicinity
 	}
 
-	supInfo := SupplierInfo{
+	supInfo := SupplierEmailInfo{
 		MapsID:   id,
 		Name:     placeResult.Name,
 		Address:  address,

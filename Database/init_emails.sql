@@ -6,6 +6,7 @@
 CREATE TABLE emails(
     id SERIAL PRIMARY KEY,
     inquiry_id VARCHAR(36),
+    thread_id VARCHAR(255),
     client_email VARCHAR(255) NOT NULL, 
     time_sent  TIMESTAMP WITH TIME ZONE NOT NULL,
     material   VARCHAR(255),
