@@ -302,9 +302,11 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			return err
 		}
 
+		sup_thread_id := message.ThreadId
+
 		if presentInfo.Present {
 			id_opt := d.IDOption{
-				Thread_ID: message.ThreadId,
+				Thread_ID: sup_thread_id,
 			}
 
 			// find the threadID and use it to pull out the row of information in the inquiry table
@@ -338,6 +340,10 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			// TODO: Implement a currency compare mechanism generally.
 			if custInquiry.Price > emailInquiry.Price {
 				// More competative item update
+				err = d.UpdateCustomerInquiryMaterial(p, customerInquiryTableName, emailInquiry.Inquiry_ID, sup_thread_id, emailInquiry.Price, emailInquiry.Currency, emailInquiry.Data_Sheet)
+				if err != nil {
+					return err
+				}
 
 			}
 		}
