@@ -364,3 +364,20 @@ func trimOriginalMessage(body string) (trimmedBody string) {
 
 	return trimmedBody
 }
+
+// Purpose: Mark e read email by the api to be marked read once all of the processing has occured
+// Parameters:
+// srv *gmail.Service --> gmail connection service to api
+func MarkEmailRead(srv *gmail.Service, user, emailID string) (err error) {
+	userMessageService := gmail.NewUsersMessagesService(srv)
+
+	modReq := gmail.ModifyMessageRequest{
+		RemoveLabelIds: []string{"UNREAD"},
+	}
+	_, err = userMessageService.Modify(user, emailID, &modReq).Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -323,7 +323,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 				return err
 			}
 
-			emailInquiry.Present = true
+			emailInquiry.Present = presentInfo.Present
 			emailInquiry.Price = presentInfo.Price
 			emailInquiry.Currency = presentInfo.Currency
 			emailInquiry.Data_Sheet = nil

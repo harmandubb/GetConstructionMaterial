@@ -311,25 +311,26 @@ func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailPresentInfo, err
 		} else if strings.Contains(value, "currency:") {
 			index = strings.Index(value, "currency:")
 			trimmedCurrencyString := strings.TrimSpace(value[index+len("currency:"):])
-			if strings.Contains(trimmedCurrencyString, "n"){
+			if strings.Contains(trimmedCurrencyString, "n") {
 				emailProductInfo.Currency = ""
 			} else {
 				emailProductInfo.Currency = trimmedCurrencyString
 			}
-		} else if strings.Contains(value, "datasheet:"){
+		} else if strings.Contains(value, "datasheet:") {
 			index = strings.Index(value, "datasheet:")
 			trimmedDatasheetString := strings.TrimSpace(value[index+len("datasheet:"):])
-			if strings.Contains(trimmedCurrencyString, "n"){
+			if strings.Contains(trimmedDatasheetString, "n") {
 				emailProductInfo.Data_Sheet = false
-			} else if strings.Contains(trimmedCurrencyString, "y") {
+			} else if strings.Contains(trimmedDatasheetString, "y") {
 				emailProductInfo.Data_Sheet = true
 			} else {
-				fmt.Pringtln("Error Parsing datasheet outcome")
+				fmt.Println("Error Parsing datasheet outcome")
 				continue
 			}
+		}
 	}
 
-	return emailProductInfo, nil 
+	return emailProductInfo, nil
 
 }
 
