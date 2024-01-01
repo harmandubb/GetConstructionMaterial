@@ -360,6 +360,11 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 
 			}
 		}
+
+		err = g.MarkEmailAsRead(srv, user, message.Id)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

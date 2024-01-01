@@ -69,16 +69,16 @@ func pushNotificationSetUp(srv *gmail.Service) (*gmail.WatchResponse, error) {
 
 }
 
-func MarkEmailAsRead(srv *gmail.Service, userID string, messageID string) error {
-	// Create a ModifyMessageRequest to remove the UNREAD label
-	modReq := &gmail.ModifyMessageRequest{
-		RemoveLabelIds: []string{"UNREAD"},
-	}
+// func MarkEmailAsRead(srv *gmail.Service, userID string, messageID string) error {
+// 	// Create a ModifyMessageRequest to remove the UNREAD label
+// 	modReq := &gmail.ModifyMessageRequest{
+// 		RemoveLabelIds: []string{"UNREAD"},
+// 	}
 
-	// Call the Gmail API to modify the message
-	_, err := srv.Users.Messages.Modify(userID, messageID, modReq).Do()
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// 	// Call the Gmail API to modify the message
+// 	_, err := srv.Users.Messages.Modify(userID, messageID, modReq).Do()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

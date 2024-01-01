@@ -368,7 +368,11 @@ func trimOriginalMessage(body string) (trimmedBody string) {
 // Purpose: Mark e read email by the api to be marked read once all of the processing has occured
 // Parameters:
 // srv *gmail.Service --> gmail connection service to api
-func MarkEmailRead(srv *gmail.Service, user, emailID string) (err error) {
+// user string --> gmail for the user you want to impersinate to do the change
+// emailID string --> id that repsersents the email you want to change
+// Return:
+// Error if present
+func MarkEmailAsRead(srv *gmail.Service, user, emailID string) (err error) {
 	userMessageService := gmail.NewUsersMessagesService(srv)
 
 	modReq := gmail.ModifyMessageRequest{
