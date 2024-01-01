@@ -18,7 +18,7 @@ func TestAddBlankCustomerInquiry(t *testing.T) {
 
 	currency := g.GetCurrency(c, matForm.Loc)
 
-	_, err := AddBlankCustomerInquiry(p, matForm, currency, "Customer_Inquiry")
+	_, err := AddBlankCustomerInquiry(p, matForm, currency, "customer_inquiry")
 	if err != nil {
 		t.Error(err)
 	}

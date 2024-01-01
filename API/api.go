@@ -351,9 +351,16 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 				return err
 			}
 
+			var currency string
+
 			if result {
+				if emailInquiry.Currency != "" {
+					currency = emailInquiry.Currency
+				} else {
+					currency = custInquiry.Currency
+				}
 				// More competative item has come in therefor update the customer inquiry table
-				err = d.UpdateCustomerInquiryMaterial(p, customerInquiryTableName, emailInquiry.Inquiry_ID, sup_thread_id, emailInquiry.Price, emailInquiry.Currency, emailInquiry.Data_Sheet)
+				err = d.UpdateCustomerInquiryMaterial(p, customerInquiryTableName, emailInquiry.Inquiry_ID, sup_thread_id, emailInquiry.Price, currency, emailInquiry.Data_Sheet)
 				if err != nil {
 					return err
 				}

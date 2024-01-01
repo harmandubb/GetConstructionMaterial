@@ -35,7 +35,7 @@ type CustomerInquiry struct {
 // Error if present
 func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, tableName, currency string) (inquiryID string, err error) {
 
-	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, supplier_email_thread_id, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tableName)
+	sqlString := fmt.Sprintf("INSERT INTO %s (email, inquiry_id, time_inquired, material, loc, present, supplier_email_thread_id, price, currency, data_sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tableName)
 
 	inquiryID = generateInquiryID()
 

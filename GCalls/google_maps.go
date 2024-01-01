@@ -149,7 +149,7 @@ func GetCurrency(c *maps.Client, loc string) (currency string) {
 }
 
 func returnCurrencyCode(address string) (currency string) {
-	words := strings.Fields(address)
+	words := strings.Fields(strings.ToUpper(address))
 	country := words[len(words)-1]
 	return countriesToCurrencies[country]
 }

@@ -164,8 +164,8 @@ func TestAddressPushNotification(t *testing.T) {
 		d.AddBlankCustomerInquiry(
 			p,
 			matFormInfo,
-			currency,
 			"customer_inquiry",
+			currency,
 		)
 
 	if err != nil {
@@ -232,7 +232,7 @@ func TestAddressPushNotification(t *testing.T) {
 		t.Error(err)
 	}
 
-	if custInquiry.Price != 3.48 {
+	if custInquiry.Price != 5.95 {
 		t.Fail()
 	}
 
