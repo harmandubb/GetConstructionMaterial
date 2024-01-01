@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,7 +17,14 @@ import (
 	"google.golang.org/api/gmail/v1"
 )
 
+// How many emails should be sent out for inquiries
 const SUPPLIERCONTACTLIMIT = 3
+
+// Currency constants
+const (
+	CADTOUSD float64 = 0.75
+	USTTOCAD float64 = 1.33
+)
 
 // Purpose: Run code that will handle a customer inquiry once it is in a database
 // Parameters:
@@ -338,8 +346,13 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			}
 
 			// TODO: Implement a currency compare mechanism generally.
-			if custInquiry.Price > emailInquiry.Price {
-				// More competative item update
+			result, err := incomingInquiryBetter(custInquiry, emailInquiry)
+			if err != nil {
+				return err
+			}
+
+			if result {
+				// More competative item has come in therefor update the customer inquiry table
 				err = d.UpdateCustomerInquiryMaterial(p, customerInquiryTableName, emailInquiry.Inquiry_ID, sup_thread_id, emailInquiry.Price, emailInquiry.Currency, emailInquiry.Data_Sheet)
 				if err != nil {
 					return err
@@ -350,4 +363,50 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 	}
 
 	return nil
+}
+
+// Purpose: Account for currency difference when comparing the pricing of material. As of right now only the american and canadian currencies will be compared.
+// Parameters:
+// present Inquiry, incoming Inquiry d.CustomerInquiry --> information that is releated to what is present in the database and what is being given by a new supplier.
+// Return:
+// Result bool --> true if the incoming inquiry is better
+// Error if present
+
+func incomingInquiryBetter(currentInquiry d.CustomerInquiry, incomingInquiry d.EmailInquiries) (bool, error) {
+	// 3 Paths
+	// 1. Nothing in the present Inquiry --> just accept the incoming
+	// 2. Incoming better --> return true after currency check
+	// 3. Curent better --> return false
+
+	// 1. Check if nothing is in the present checking the present field is the easiest
+	if currentInquiry.Present {
+		//Check if there is a currency difference
+		if currentInquiry.Currency != incomingInquiry.Currency {
+			// Need to perfrom a currency change
+			if currentInquiry.Currency == "CAD" && incomingInquiry.Currency == "USD" {
+				if currentInquiry.Price*CADTOUSD < incomingInquiry.Price {
+					return false, nil
+				} else {
+					return true, nil
+				}
+			} else if currentInquiry.Currency == "USD" && incomingInquiry.Currency == "CAD" {
+				if currentInquiry.Price < incomingInquiry.Price*CADTOUSD {
+					return false, nil
+				} else {
+					return true, nil
+				}
+			} else {
+				return false, errors.New("currency exchange is not present")
+			}
+		} else {
+			// Don't need to perform a currency change
+			if incomingInquiry.Price < currentInquiry.Price {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}
+	} else {
+		return true, nil
+	}
 }
