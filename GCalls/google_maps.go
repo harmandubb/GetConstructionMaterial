@@ -137,7 +137,18 @@ func GeocodeGeneralLocation(c *maps.Client, loc string) (geometry maps.AddressGe
 
 }
 
-func ReturnCurrencyCode(address string) (currency string) {
+func GetCurrency(c *maps.Client, loc string) (currency string) {
+	_, address, err := GeocodeGeneralLocation(c, loc)
+	if err != nil {
+		currency = ""
+	} else {
+		currency = returnCurrencyCode(address)
+	}
+
+	return currency
+}
+
+func returnCurrencyCode(address string) (currency string) {
 	words := strings.Fields(address)
 	country := words[len(words)-1]
 	return countriesToCurrencies[country]

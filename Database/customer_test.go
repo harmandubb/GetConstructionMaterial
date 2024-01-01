@@ -8,6 +8,7 @@ import (
 
 func TestAddBlankCustomerInquiry(t *testing.T) {
 	p := ConnectToDataBase("mynewdatabase")
+	c, _ := g.GetMapsClient()
 
 	matForm := g.MaterialFormInfo{
 		Email:    "harmand1999@gmail.com",
@@ -15,7 +16,9 @@ func TestAddBlankCustomerInquiry(t *testing.T) {
 		Material: "Fire Stop Fire Collars 2 in",
 	}
 
-	_, err := AddBlankCustomerInquiry(p, matForm, "Customer_Inquiry")
+	currency := g.GetCurrency(c, matForm.Loc)
+
+	_, err := AddBlankCustomerInquiry(p, matForm, currency, "Customer_Inquiry")
 	if err != nil {
 		t.Error(err)
 	}
@@ -69,6 +72,7 @@ func TestGenerateInquiryNumber(t *testing.T) {
 
 func TestUpadteCustomerInquiryMaterial(t *testing.T) {
 	p := ConnectToDataBase("mynewdatabase")
+	c, _ := g.GetMapsClient()
 
 	matForm := g.MaterialFormInfo{
 		Email:    "harmand1999@gmail.com",
@@ -78,14 +82,15 @@ func TestUpadteCustomerInquiryMaterial(t *testing.T) {
 
 	tableName := "Customer_Inquiry"
 
-	inquiry_id, err := AddBlankCustomerInquiry(p, matForm, tableName)
+	currency := g.GetCurrency(c, matForm.Loc)
+
+	inquiry_id, err := AddBlankCustomerInquiry(p, matForm, currency, tableName)
 	if err != nil {
 		t.Error(err)
 	}
 
 	supplier_email_id_thread := "SupID"
 	price := 10.0
-	currency := "CAD"
 	datasheet := []byte("THISISAPLACEHOLDER")
 
 	err = UpdateCustomerInquiryMaterial(p, tableName, inquiry_id, supplier_email_id_thread, price, currency, &datasheet)

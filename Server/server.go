@@ -20,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/gmail/v1"
+	"googlemaps.github.io/maps"
 )
 
 type EmailFormInfo struct {
@@ -185,6 +186,13 @@ func Idle() {
 				},
 			}
 
+			mapsServicePool := sync.Pool{
+				New: func() interface{} {
+					c, _ := g.GetMapsClient()
+					return c
+				},
+			}
+
 			p := dataBaseConnectionPool.Get().(*pgxpool.Pool)
 			defer dataBaseConnectionPool.Put(p)
 
@@ -193,7 +201,11 @@ func Idle() {
 
 			ctx, cancel := context.WithCancel(context.Background())
 
-			go d.ConcurrentAddBlankCustomerInquiry(inquiryIDStream, errStream, ctx, p, materialFormInfo, os.Getenv("CUSTOMER_INQUIRY_TABLE"))
+			c := mapsServicePool.Get().(*maps.Client)
+
+			currency := g.GetCurrency(c, materialFormInfo.Loc)
+
+			go d.ConcurrentAddBlankCustomerInquiry(inquiryIDStream, errStream, ctx, p, materialFormInfo, currency, os.Getenv("CUSTOMER_INQUIRY_TABLE"))
 
 			//save result in the spread sheet for a back up
 			spreadsheetID := "1NXTK2G6sQOs0ZSQ1046ijoanPDNWPKOc0-I7dEMotQ8"

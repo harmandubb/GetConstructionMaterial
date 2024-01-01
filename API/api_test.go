@@ -136,6 +136,10 @@ func TestAddressPushNotification(t *testing.T) {
 
 	p := d.ConnectToDataBase("mynewdatabase")
 	srv := g.ConnectToGmailAPI()
+	c, err := g.GetMapsClient()
+	if err != nil {
+		t.Error(err)
+	}
 
 	user := "info@docstruction.com"
 
@@ -154,10 +158,13 @@ func TestAddressPushNotification(t *testing.T) {
 		Loc:      "Richmond BC",
 	}
 
+	currency := g.GetCurrency(c, matFormInfo.Loc)
+
 	inquiry_id, err := //write a customer_inquiry line as well
 		d.AddBlankCustomerInquiry(
 			p,
 			matFormInfo,
+			currency,
 			"customer_inquiry",
 		)
 
