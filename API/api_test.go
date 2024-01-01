@@ -116,3 +116,21 @@ func TestMaterialFormHandler(t *testing.T) {
 	str := string(body)
 	fmt.Println(str)
 }
+
+func TestAddressPushNotification(t *testing.T) {
+	p := d.ConnectToDataBase("mynewdatabase")
+	srv := g.ConnectToGmailAPI()
+
+	file, err := os.ReadFile("../Server/GPT_Prompts/email_receive_prompt.txt")
+	if err != nil {
+		t.Error(err)
+	}
+
+	prompt := string(file)
+
+	err = AddressPushNotification(p, srv, "info@docstruction.com", prompt, "emails", "customer_inquiry")
+	if err != nil {
+		t.Error(err)
+	}
+
+}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -290,8 +291,10 @@ func GetMessage(srv *gmail.Service, msg *gmail.Message, user string) (emailInfo 
 
 	var attachementsLocations []string
 
+	// I think I need to actually get the specific email.
+
 	// for _, part := range msg.Payload.Parts {
-	part := msg.Payload
+	part := msgData.Payload
 
 	if len(part.Body.Data) > 0 {
 		body, err = base64.URLEncoding.DecodeString(part.Body.Data)
@@ -324,7 +327,6 @@ func GetMessage(srv *gmail.Service, msg *gmail.Message, user string) (emailInfo 
 
 		attachementsLocations = append(attachementsLocations, attachmentLoc)
 	}
-	// }
 
 	emailInfo = EmailInfo{
 		Date:        time.Now(),
@@ -346,7 +348,19 @@ func GetMessage(srv *gmail.Service, msg *gmail.Message, user string) (emailInfo 
 // trimmedBody string --> Message without the original message.
 
 func trimOriginalMessage(body string) (trimmedBody string) {
-	trimmedBody = body[:strings.Index(body, "-----Original Message-----")]
+	i := strings.Index(body, "-----Original Message-----")
+	if i > 0 {
+		body = body[:i]
+	}
+
+	// Compile regular expression to match quoted text
+	re := regexp.MustCompile(`(?m)^>.*$`)
+
+	// Remove the quoted text
+	trimmedBody = re.ReplaceAllString(body, "")
+
+	// Trim whitespace
+	trimmedBody = strings.TrimSpace(trimmedBody)
 
 	return trimmedBody
 }

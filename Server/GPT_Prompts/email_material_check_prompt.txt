@@ -1,5 +1,0 @@
-Check if this response indicates if the particular product is present, a price is given, and a datasheet is provided: 
-
-%s
-
-give response with y (yes) or n (no) in the order of present, price, datasheet? For example a response can look either like "y,y,y" or "y,n,n"

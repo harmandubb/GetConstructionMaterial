@@ -1,0 +1,15 @@
+Check if this response indicates if the particular product is present, a price is given, and a datasheet is provided: 
+
+%s
+
+Give the response in the order of present, price, currency (if avialable) and datasheet.
+
+For example -->
+Present: y
+Price: 1.00
+Currency: CAD
+Datasheet: y 
+
+Do not include any currency symbols in the Price section. 
+
+Where present and datasheet can be either y or n for yes or no respectivively. If a currency is not provided then write n. 

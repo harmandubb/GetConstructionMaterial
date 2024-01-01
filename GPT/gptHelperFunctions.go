@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"regexp"
 	"strconv"
@@ -224,20 +223,8 @@ func createEmailMaterialRequestPrompt(promptTemplate string, salesPersonName str
 // Return:
 // prompt string --> the prompt that is suppose to be sent to chat gpt
 // error if present
-func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplatePath string, body string) (string, error) {
-	file, err := os.Open(receiveAnalysisTemplatePath)
-	if err != nil {
-		return "", err
-	}
-
-	emailByte, err := io.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
-
-	emailString := string(emailByte)
-
-	prompt := fmt.Sprintf(emailString, body)
+func createReceiceEmailAnalysisPrompt(receiveAnalysisTemplate string, body string) (string, error) {
+	prompt := fmt.Sprintf(receiveAnalysisTemplate, body)
 
 	return prompt, nil
 
@@ -250,6 +237,8 @@ func PromptGPTReceiveEmailAnalysis(receiveAnalysisTemplate string, body string) 
 	}
 
 	resp, err := promptGPT(prompt)
+	fmt.Printf("GPT Prompt:\n%s\n", body)
+	fmt.Printf("Response:\n%s\n", resp)
 	if err != nil {
 		return EmailPresentInfo{}, err
 	}
@@ -295,30 +284,52 @@ func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailPresentInfo, err
 
 	gptResponse = strings.ToLower(gptResponse)
 
-	values := strings.Split(gptResponse, ",")
+	values := strings.Split(gptResponse, "\n")
 
-	present := gptAnalysisMaterialPresent(values[0])
+	var index int
 
-	emailProductInfo.Present = present
-	emailProductInfo.Currency = ""
-	emailProductInfo.Data_Sheet = false
-	emailProductInfo.Price = 0
+	for _, value := range values {
+		if strings.Contains(value, "present:") {
+			index = strings.Index(value, "present:")
+			if strings.Contains(strings.TrimSpace(value[index+len("present: "):]), "y") {
+				emailProductInfo.Present = true
+			} else {
+				emailProductInfo.Present = false
+				break
+			}
+		} else if strings.Contains(value, "price:") {
+			index = strings.Index(value, "price:")
+			trimmedPriceString := strings.TrimSpace(value[index+len("price:"):])
 
-	if !present {
-		return emailProductInfo, nil
+			f, err := strconv.ParseFloat(trimmedPriceString, 64)
+			if err != nil {
+				fmt.Println("Unable to convert the price")
+				continue
+			}
+
+			emailProductInfo.Price = f
+		} else if strings.Contains(value, "currency:") {
+			index = strings.Index(value, "currency:")
+			trimmedCurrencyString := strings.TrimSpace(value[index+len("currency:"):])
+			if strings.Contains(trimmedCurrencyString, "n"){
+				emailProductInfo.Currency = ""
+			} else {
+				emailProductInfo.Currency = trimmedCurrencyString
+			}
+		} else if strings.Contains(value, "datasheet:"){
+			index = strings.Index(value, "datasheet:")
+			trimmedDatasheetString := strings.TrimSpace(value[index+len("datasheet:"):])
+			if strings.Contains(trimmedCurrencyString, "n"){
+				emailProductInfo.Data_Sheet = false
+			} else if strings.Contains(trimmedCurrencyString, "y") {
+				emailProductInfo.Data_Sheet = true
+			} else {
+				fmt.Pringtln("Error Parsing datasheet outcome")
+				continue
+			}
 	}
 
-	if gptAnalysisSwitchStatement(values[1]) {
-		price, currency := gptAnalysisPrice(gptResponse)
-		emailProductInfo.Price = price
-		emailProductInfo.Currency = currency
-	}
-
-	if gptAnalysisSwitchStatement(values[2]) {
-		emailProductInfo.Data_Sheet = true
-	}
-
-	return emailProductInfo, nil
+	return emailProductInfo, nil 
 
 }
 
