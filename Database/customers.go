@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"googlemaps.github.io/maps"
 )
 
 type CustomerInquiry struct {
@@ -33,13 +34,20 @@ type CustomerInquiry struct {
 // tableNmae string --> name of the table that you want to input the data into
 // Return:
 // Error if present
-func AddBlankCustomerInquiry(p *pgxpool.Pool, matForm g.MaterialFormInfo, tableName string) (inquiryID string, err error) {
+func AddBlankCustomerInquiry(p *pgxpool.Pool, c *maps.Client, matForm g.MaterialFormInfo, tableName string) (inquiryID string, err error) {
 
 	sqlString := fmt.Sprintf("INSERT INTO %s (Email, Inquiry_ID, Time_Inquired, Material, Loc, Present, supplier_email_thread_id, Price, Currency, Data_Sheet) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tableName)
 
 	inquiryID = generateInquiryID()
 
-	err = dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, "", 0, "", nil)
+	_, address, err := g.GeocodeGeneralLocation(c, matForm.Loc)
+	if err != nil {
+		return "", err
+	}
+
+	currency := g.ReturnCurrencyCode(address)
+
+	err = dataBaseTransmit(p, sqlString, matForm.Email, inquiryID, time.Now(), matForm.Material, matForm.Loc, false, "", 0, currency, nil)
 	if err != nil {
 		return "", err
 	}

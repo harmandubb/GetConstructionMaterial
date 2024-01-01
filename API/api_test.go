@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"os"
 	"testing"
+
+	"googlemaps.github.io/maps"
 )
 
 func TestContactSupplierForMaterial(t *testing.T) {
@@ -118,8 +120,92 @@ func TestMaterialFormHandler(t *testing.T) {
 }
 
 func TestAddressPushNotification(t *testing.T) {
+
+	// Sample Email used:
+	// Hello Docstruction,
+
+	// We do have fire stop collars.
+
+	// For 2 in the price is $3.48 per collar.
+
+	// Let me know if you beed anything else.
+
+	// Thanks,
+
+	// Harman
+
 	p := d.ConnectToDataBase("mynewdatabase")
 	srv := g.ConnectToGmailAPI()
+
+	user := "info@docstruction.com"
+
+	// construct a dumby table entery to work on
+	// Get the email thread ID that is needed from the email that you want to work with
+	messages, err := g.GetUnreadMessagesData(srv, user)
+	if err != nil {
+		t.Error(err)
+	}
+
+	sup_thread_id := messages.Messages[0].ThreadId
+
+	matFormInfo := g.MaterialFormInfo{
+		Email:    "harmand1999@gmail.com",
+		Material: "Fire Stop Collars",
+		Loc:      "Richmond BC",
+	}
+
+	inquiry_id, err := //write a customer_inquiry line as well
+		d.AddBlankCustomerInquiry(
+			p,
+			matFormInfo,
+			"customer_inquiry",
+		)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	//Create a emails entery with the email info above.
+	err = d.AddBlankEmailInquiryEntry(
+		p,
+		inquiry_id,
+		"test_client@gmail.com",
+		"Fire Stopping Collars 2 in",
+		g.SupplierEmailInfo{
+			MapsID:  "TEST_MAPS_ID",
+			Name:    "TEST_SUPPLIER",
+			Address: "TEST BC",
+			Geometry: maps.AddressGeometry{
+				Location: maps.LatLng{
+					Lat: 1.0,
+					Lng: 2.0,
+				},
+				LocationType: "NON",
+				Bounds: maps.LatLngBounds{
+					NorthEast: maps.LatLng{
+						Lat: 1.0,
+						Lng: 1.0,
+					},
+				},
+				Viewport: maps.LatLngBounds{
+					NorthEast: maps.LatLng{
+						Lat: 1.0,
+						Lng: 1.0,
+					},
+				},
+				Types: []string{"NON"},
+			},
+			Website:        "TEST.com",
+			Email:          []string{"SUPPLIER_TEST@gmail.com"},
+			Email_ThreadID: sup_thread_id,
+		},
+		true,
+		"emails",
+	)
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	file, err := os.ReadFile("../Server/GPT_Prompts/email_receive_prompt.txt")
 	if err != nil {
@@ -128,9 +214,19 @@ func TestAddressPushNotification(t *testing.T) {
 
 	prompt := string(file)
 
-	err = AddressPushNotification(p, srv, "info@docstruction.com", prompt, "emails", "customer_inquiry")
+	err = AddressPushNotification(p, srv, user, prompt, "emails", "customer_inquiry")
 	if err != nil {
 		t.Error(err)
+	}
+
+	// Read the customer section and comapre if it is what is expected
+	custInquiry, err := d.ReadCustomerInquiry(p, "customer_inquiry", inquiry_id)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if custInquiry.Price != 3.48 {
+		t.Fail()
 	}
 
 }

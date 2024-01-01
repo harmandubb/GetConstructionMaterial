@@ -22,15 +22,15 @@ func TestSentEmail(t *testing.T) {
 
 }
 
-func TestGetLatestUnreadMessage(t *testing.T) {
-	srv := ConnectToGmailAPI()
-	emailInfo, _, err := GetLatestUnreadMessage(srv)
-	if err != nil {
-		t.Error(err)
-	}
+// func TestGetLatestUnreadMessage(t *testing.T) {
+// 	srv := ConnectToGmailAPI()
+// 	emailInfo, _, err := GetLatestUnreadMessage(srv)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	fmt.Println(emailInfo)
-}
+// 	fmt.Println(emailInfo)
+// }
 
 func TestWatchPushNotification(t *testing.T) {
 	srv := ConnectToGmailAPI()

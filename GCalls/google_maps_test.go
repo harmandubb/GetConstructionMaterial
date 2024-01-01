@@ -58,7 +58,7 @@ func TestGeocdeGeneralLocation(t *testing.T) {
 		t.Error(err)
 	}
 
-	result, err := GeocodeGeneralLocation(c, "Surrey BC")
+	result, _, err := GeocodeGeneralLocation(c, "Surrey BC")
 	if err != nil {
 		t.Error(err)
 	}

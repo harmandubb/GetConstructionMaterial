@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/joho/godotenv"
 	"googlemaps.github.io/maps"
 )
 
@@ -18,11 +20,19 @@ type SupplierEmailInfo struct {
 	Email_ThreadID string
 }
 
+var countriesToCurrencies = map[string]string{
+	"USA":    "USD",
+	"UK":     "GBP",
+	"CANADA": "CAD",
+	"JPY":    "Yen",
+	// other entries...
+}
+
 func GetMapsClient() (*maps.Client, error) {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	return &maps.Client{}, err
-	// }
+	err := godotenv.Load()
+	if err != nil {
+		return &maps.Client{}, err
+	}
 
 	c, err := maps.NewClient(maps.WithAPIKey(os.Getenv("TESTING_MAPS_KEY")))
 	if err != nil {
@@ -110,7 +120,7 @@ func GetSupplierInfo(c *maps.Client, placeResult maps.PlacesSearchResult) (Suppl
 	return supInfo, nil
 }
 
-func GeocodeGeneralLocation(c *maps.Client, loc string) (maps.AddressGeometry, error) {
+func GeocodeGeneralLocation(c *maps.Client, loc string) (geometry maps.AddressGeometry, address string, err error) {
 	fmt.Printf("Location String inputed: %s\n", loc)
 	ctx := context.Background()
 
@@ -120,9 +130,15 @@ func GeocodeGeneralLocation(c *maps.Client, loc string) (maps.AddressGeometry, e
 
 	geoResp, err := c.Geocode(ctx, &geoReq)
 	if err != nil {
-		return maps.AddressGeometry{}, err
+		return maps.AddressGeometry{}, "", err
 	}
 
-	return geoResp[0].Geometry, nil
+	return geoResp[0].Geometry, geoResp[0].FormattedAddress, err
 
+}
+
+func ReturnCurrencyCode(address string) (currency string) {
+	words := strings.Fields(address)
+	country := words[len(words)-1]
+	return countriesToCurrencies[country]
 }

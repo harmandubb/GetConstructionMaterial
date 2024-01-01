@@ -179,7 +179,7 @@ func ContactSupplierForMaterial(srv *gmail.Service, matInfo g.MaterialFormInfo, 
 	}
 
 	//Get Lat and lng coordinates
-	geometry, err := g.GeocodeGeneralLocation(c, matInfo.Loc)
+	geometry, _, err := g.GeocodeGeneralLocation(c, matInfo.Loc)
 	if err != nil {
 		log.Fatalf("Geocoding Converstion Error: %v", err)
 		time.Sleep(5 * time.Second)
