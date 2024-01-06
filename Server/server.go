@@ -32,11 +32,17 @@ type ServerResponse struct {
 	Success bool
 }
 
+const EMAIL_INQUIRY_TABLE_NAME  = os.Getenv("EMAIL_INQUIRY_TABLE_NAME")
+const CUSTOMER_INQUIRY_TABLE_NAME = os.Getenv("CUSTOMER_INQUIRY_TABLE_NAME")
+
 //go:embed GPT_Prompts/material_catigorization_prompt.txt
 var catigorizationTemplate string
 
 //go:embed GPT_Prompts/email_prompt.txt
 var emailTemplate string
+
+//go:embed GPT_Prompts/email_receive_prompt.txt
+var emailReceiveTemplate string 
 
 func getPath(relativePath string) string {
 	_, b, _, _ := runtime.Caller(0)
@@ -75,6 +81,25 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 }
 
 func Idle() {
+	dataBaseConnectionPool := &sync.Pool{
+		New: func() interface{} {
+			return d.ConnectToDataBase(os.Getenv("DB_NAME"))
+		},
+	}
+
+	gmailServicePool := &sync.Pool{
+		New: func() interface{} {
+			return g.ConnectToGmailAPI()
+		},
+	}
+
+	mapsServicePool := &sync.Pool{
+		New: func() interface{} {
+			c, _ := g.GetMapsClient()
+			return c
+		},
+	}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// setCORS(w, r)
 		log.Println("Health check request received")
@@ -174,24 +199,7 @@ func Idle() {
 				return
 			}
 
-			dataBaseConnectionPool := &sync.Pool{
-				New: func() interface{} {
-					return d.ConnectToDataBase(os.Getenv("DB_NAME"))
-				},
-			}
-
-			gmailServicePool := sync.Pool{
-				New: func() interface{} {
-					return g.ConnectToGmailAPI()
-				},
-			}
-
-			mapsServicePool := sync.Pool{
-				New: func() interface{} {
-					c, _ := g.GetMapsClient()
-					return c
-				},
-			}
+			
 
 			p := dataBaseConnectionPool.Get().(*pgxpool.Pool)
 			defer dataBaseConnectionPool.Put(p)
@@ -202,6 +210,7 @@ func Idle() {
 			ctx, cancel := context.WithCancel(context.Background())
 
 			c := mapsServicePool.Get().(*maps.Client)
+			defer mapsServicePool.Put(c)
 
 			currency := g.GetCurrency(c, materialFormInfo.Loc)
 
@@ -292,12 +301,39 @@ func Idle() {
 			return
 		}
 
-		// Write an HTTP 200 OK status
+		// Call the push notification address function here 
+		srv := gmailServicePool.Get().(*gmail.Service)
+		defer gmailServicePool.Put(srv)
+
+		c := mapsServicePool.Get().(*maps.Client)
+		defer mapsServicePool.Put(c)
+
+		p := dataBaseConnectionPool.Get().(*pgxpool.Pool)
+		defer dataBaseConnectionPool.Put(p)
+
+		user := os.Getenv("USER_EMAIL")
+
+		err = AddressPushNotification(
+			p,
+			srv,
+			user,
+			emailReceiveTemplate,
+			EMAIL_INQUIRY_TABLE_NAME,
+			CUSTOMER_INQUIRY_TABLE_NAME,
+		)
+
+		if err != nil {
+			fmt.Printf("Push Notification Error: %v/n", err)
+		}
+		
 		w.WriteHeader(http.StatusOK)
 
 		// Send a response body
 		w.Write([]byte("OK"))
+
 	})
+
+
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe("0.0.0.0:8080", nil)
 	if err != nil {
