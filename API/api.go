@@ -288,8 +288,11 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 	fmt.Println("In the Address Push Notification Function")
 	messages, err := g.GetUnreadMessagesData(srv, user)
 	if err != nil {
+		fmt.Printf("Retrive error for unread Messages: %v\n", err)
 		return err
 	}
+
+	fmt.Println("Gotten the unRead MEssages", messages.Messages[0].Id)
 
 	// implement concourrency tools here
 	// Make a different thread read the different unread messages
@@ -303,12 +306,14 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 		emailInfo, _, err := g.GetMessage(srv, message, user)
 		fmt.Println("Email Body:", emailInfo.Body)
 		if err != nil {
+			fmt.Printf("Specific Message retrive error: %v\n", err)
 			return err
 		}
 
 		// Need to analize the the email body in chat gpt to see what I should do next
 		presentInfo, err := gpt.PromptGPTReceiveEmailAnalysis(receiveAnalysisTemplate, emailInfo.Body)
 		if err != nil {
+			fmt.Printf("Incoming Message Analysis error: %v\n", err)
 			return err
 		}
 
@@ -323,6 +328,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			// find the threadID and use it to pull out the row of information in the inquiry table
 			emailInquiry, err := d.ReadEmailInquiryEntry(p, emailInquiryTableName, id_opt)
 			if err != nil {
+				fmt.Printf("Error Reading database email inquiry entery: %v\n", err)
 				return err
 			}
 
@@ -338,6 +344,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 
 			err = d.UpdateEmailInquiryEntryMaterialPresent(p, emailInquiry.Inquiry_ID, emailInquiryTableName, emailInquiry.Price, emailInquiry.Currency, emailInquiry.Data_Sheet)
 			if err != nil {
+				fmt.Printf("Error updating the material table: %v\n", err)
 				return err
 			}
 
@@ -345,12 +352,14 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			// Read the customer inquiry row into
 			custInquiry, err := d.ReadCustomerInquiry(p, customerInquiryTableName, emailInquiry.Inquiry_ID)
 			if err != nil {
+				fmt.Printf("Error reading Customer inquiry table: %v\n", err)
 				return err
 			}
 
 			// TODO: Implement a currency compare mechanism generally.
 			result, err := incomingInquiryBetter(custInquiry, emailInquiry)
 			if err != nil {
+				fmt.Printf("Error deciding inquiry quality: %v\n", err)
 				return err
 			}
 
@@ -365,6 +374,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 				// More competative item has come in therefor update the customer inquiry table
 				err = d.UpdateCustomerInquiryMaterial(p, customerInquiryTableName, emailInquiry.Inquiry_ID, sup_thread_id, emailInquiry.Price, currency, emailInquiry.Data_Sheet)
 				if err != nil {
+					fmt.Printf("Error updating customer inquiry table: %v\n", err)
 					return err
 				}
 
@@ -373,6 +383,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 
 		err = g.MarkEmailAsRead(srv, user, message.Id)
 		if err != nil {
+			fmt.Printf("Error marking email as read: %v\n", err)
 			return err
 		}
 	}
