@@ -310,7 +310,7 @@ func Idle() {
 
 		user := os.Getenv("USER_EMAIL")
 
-		fmt.Println(emailReceiveTemplate)
+		fmt.Println("User email is:", user)
 
 		go api.AddressPushNotification(
 			p,
