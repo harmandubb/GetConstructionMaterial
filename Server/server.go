@@ -302,6 +302,8 @@ func Idle() {
 		srv := gmailServicePool.Get().(*gmail.Service)
 		defer gmailServicePool.Put(srv)
 
+		fmt.Println("Server credentials", srv)
+
 		c := mapsServicePool.Get().(*maps.Client)
 		defer mapsServicePool.Put(c)
 
