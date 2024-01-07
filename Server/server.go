@@ -310,7 +310,7 @@ func Idle() {
 
 		user := os.Getenv("USER_EMAIL")
 
-		err := api.AddressPushNotification(
+		go api.AddressPushNotification(
 			p,
 			srv,
 			user,
@@ -318,10 +318,6 @@ func Idle() {
 			EMAIL_INQUIRY_TABLE_NAME,
 			CUSTOMER_INQUIRY_TABLE_NAME,
 		)
-
-		if err != nil {
-			fmt.Printf("Push Notification Error: %v/n", err)
-		}
 
 		w.WriteHeader(http.StatusOK)
 
