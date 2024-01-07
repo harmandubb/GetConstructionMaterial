@@ -21,13 +21,21 @@ func TestPromptGPTMaterialCategorization(t *testing.T) {
 
 func TestParseGPTAnalysisMaterialResponse(t *testing.T) {
 	srv := g.ConnectToGmailAPI()
-	unReadEmailInfo, _, err := g.GetLatestUnreadMessage(srv)
+
+	user := "info@docstruction.com"
+
+	unreadMsgData, err := g.GetUnreadMessagesData(srv, user)
+	if err != nil {
+		t.Error(err)
+	}
+
+	emailInfo, _, err := g.GetMessage(srv, unreadMsgData.Messages[0], user)
 	if err != nil {
 		t.Error(err)
 	}
 
 	templatePath := "./GPT_Prompts/email_material_check_prompt.txt"
-	prompt, err := createReceiceEmailAnalysisPrompt(templatePath, unReadEmailInfo.Body)
+	prompt, err := createReceiceEmailAnalysisPrompt(templatePath, emailInfo.Body)
 	if err != nil {
 		t.Error(err)
 	}

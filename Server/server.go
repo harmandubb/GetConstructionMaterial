@@ -32,8 +32,8 @@ type ServerResponse struct {
 	Success bool
 }
 
-const EMAIL_INQUIRY_TABLE_NAME  = os.Getenv("EMAIL_INQUIRY_TABLE_NAME")
-const CUSTOMER_INQUIRY_TABLE_NAME = os.Getenv("CUSTOMER_INQUIRY_TABLE_NAME")
+var EMAIL_INQUIRY_TABLE_NAME = os.Getenv("EMAIL_INQUIRY_TABLE_NAME")
+var CUSTOMER_INQUIRY_TABLE_NAME = os.Getenv("CUSTOMER_INQUIRY_TABLE_NAME")
 
 //go:embed GPT_Prompts/material_catigorization_prompt.txt
 var catigorizationTemplate string
@@ -42,7 +42,7 @@ var catigorizationTemplate string
 var emailTemplate string
 
 //go:embed GPT_Prompts/email_receive_prompt.txt
-var emailReceiveTemplate string 
+var emailReceiveTemplate string
 
 func getPath(relativePath string) string {
 	_, b, _, _ := runtime.Caller(0)
@@ -199,8 +199,6 @@ func Idle() {
 				return
 			}
 
-			
-
 			p := dataBaseConnectionPool.Get().(*pgxpool.Pool)
 			defer dataBaseConnectionPool.Put(p)
 
@@ -301,7 +299,7 @@ func Idle() {
 			return
 		}
 
-		// Call the push notification address function here 
+		// Call the push notification address function here
 		srv := gmailServicePool.Get().(*gmail.Service)
 		defer gmailServicePool.Put(srv)
 
@@ -313,7 +311,7 @@ func Idle() {
 
 		user := os.Getenv("USER_EMAIL")
 
-		err = AddressPushNotification(
+		err := api.AddressPushNotification(
 			p,
 			srv,
 			user,
@@ -325,14 +323,13 @@ func Idle() {
 		if err != nil {
 			fmt.Printf("Push Notification Error: %v/n", err)
 		}
-		
+
 		w.WriteHeader(http.StatusOK)
 
 		// Send a response body
 		w.Write([]byte("OK"))
 
 	})
-
 
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe("0.0.0.0:8080", nil)
