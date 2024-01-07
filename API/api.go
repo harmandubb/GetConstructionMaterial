@@ -300,6 +300,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 	for _, message := range messages.Messages {
 		// need to make a function (concurrent) that runs through the unread emails to do all of the needed tasks
 		emailInfo, _, err := g.GetMessage(srv, message, user)
+		fmt.Println("Email Body:", emailInfo.Body)
 		if err != nil {
 			return err
 		}
