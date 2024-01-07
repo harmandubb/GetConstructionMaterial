@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 	"google.golang.org/api/gmail/v1"
 	"googlemaps.github.io/maps"
 )
@@ -168,10 +167,10 @@ func Idle() {
 	http.HandleFunc("/materialForm", func(w http.ResponseWriter, r *http.Request) {
 		setCORS(w, r)
 
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatalf("Error loading .env file: %v", err)
-		}
+		// err := godotenv.Load()
+		// if err != nil {
+		// 	log.Fatalf("Error loading .env file: %v", err)
+		// }
 
 		// Handle OPTIONS for preflight
 		if r.Method == http.MethodOptions {

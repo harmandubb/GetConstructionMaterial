@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -83,10 +82,10 @@ func createMaterialCategorizationPrompt(promptTemplate string, material string) 
 // resp string --> answer from gpt
 // error if there are any present
 func promptGPT(prompt string) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	return "", err
+	// }
 	key := os.Getenv("OPEN_AI_KEY")
 	client := openai.NewClient(key)
 
