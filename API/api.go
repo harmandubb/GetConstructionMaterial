@@ -292,6 +292,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 		return err
 	}
 
+	fmt.Println("Size of the message array", len(messages.Messages))
 	fmt.Println("Gotten the unRead MEssages", messages.Messages[0].Id)
 
 	// implement concourrency tools here

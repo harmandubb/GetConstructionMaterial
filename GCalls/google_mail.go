@@ -253,6 +253,8 @@ func GetUnreadMessagesData(srv *gmail.Service, user string) (r *gmail.ListMessag
 		return nil, err
 	}
 
+	fmt.Println("Checking the unread function", len(r.Messages))
+
 	return r, nil
 }
 
