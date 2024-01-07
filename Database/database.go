@@ -23,8 +23,6 @@ func ConnectToDataBase(database string) *pgxpool.Pool {
 
 	url := "postgresql://" + os.Getenv("DB_USERNAME") + ":" + os.Getenv("DB_PASSWORD") + "@" + os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + "/" + database
 
-	fmt.Println("DATABASE URL: ", url)
-
 	dbpool, err := pgxpool.New(context.Background(), url)
 	if err != nil {
 		log.Fatal("Error:", err)

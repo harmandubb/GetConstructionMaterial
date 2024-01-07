@@ -64,8 +64,8 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 		"https://localhost":                                                       true,
 	}
 
-	// fmt.Println("Origin Request:", origin)
-	// fmt.Println("Server present:", allowedOrigins[origin])
+	fmt.Println("Origin Request:", origin)
+	fmt.Println("Server present:", allowedOrigins[origin])
 
 	_, ok := allowedOrigins[origin]
 
@@ -320,6 +320,8 @@ func Idle() {
 		)
 
 		w.WriteHeader(http.StatusOK)
+
+		fmt.Println("Returning a positive response to the sender")
 
 		// Send a response body
 		w.Write([]byte("OK"))
