@@ -247,7 +247,9 @@ func checkMessage(srv *gmail.Service, subj string, loc string, body string) (boo
 // r *gmail.ListMessagesResponse --> list of undread message data
 // Error if any present
 func GetUnreadMessagesData(srv *gmail.Service, user string) (r *gmail.ListMessagesResponse, err error) {
-	queryString := "In:inbox and Is:unread"
+	// queryString := "in:inbox and is:unread"
+	// queryString := "in:inbox"
+	queryString := "is:unread"
 
 	r, err = srv.Users.Messages.List(user).Q(queryString).Do()
 	if err != nil {
