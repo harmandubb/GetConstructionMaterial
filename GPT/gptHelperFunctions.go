@@ -292,7 +292,6 @@ func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailPresentInfo, err
 			if err != nil {
 				fmt.Println("Unable to convert the price")
 				f = 0
-				continue
 			}
 
 			emailProductInfo.Price = f
@@ -313,7 +312,6 @@ func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailPresentInfo, err
 				emailProductInfo.Data_Sheet = true
 			} else {
 				fmt.Println("Error Parsing datasheet outcome")
-				continue
 			}
 		}
 	}
