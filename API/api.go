@@ -277,6 +277,20 @@ func RefreshPushNotificationWatch() (err error) {
 	return nil
 }
 
+func RefreshPushNotificationWatchAfterDay() {
+	ticker := time.NewTicker(24 * time.Hour)
+
+	go func() {
+		for range ticker.C {
+			err := RefreshPushNotificationWatch()
+			if err != nil {
+				log.Fatalf("Error refreshing the push notification alert: %v", err)
+			}
+		}
+	}()
+
+}
+
 // Purpose: go thorugh all unread emails and process them to see what the outcome of the exchange was and update the database accordingly
 // Parameters:
 // srv *gmail.Service --> pointer to the establish gmail api service
