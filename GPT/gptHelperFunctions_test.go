@@ -47,7 +47,7 @@ func TestParseGPTAnalysisMaterialResponse(t *testing.T) {
 
 	emailProductInfo, err := parseGPTAnalysisMaterialResponse(resp)
 
-	fmt.Println(emailProductInfo)
+	// fmt.Println(emailProductInfo)
 
 	res2B, _ := json.Marshal(emailProductInfo)
 	fmt.Println(string(res2B))

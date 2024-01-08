@@ -226,8 +226,6 @@ func PromptGPTReceiveEmailAnalysis(receiveAnalysisTemplate string, body string) 
 	}
 
 	resp, err := promptGPT(prompt)
-	fmt.Printf("GPT Prompt:\n%s\n", body)
-	fmt.Printf("Response:\n%s\n", resp)
 	if err != nil {
 		return EmailPresentInfo{}, err
 	}

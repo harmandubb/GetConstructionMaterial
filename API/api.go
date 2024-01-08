@@ -284,16 +284,11 @@ func RefreshPushNotificationWatch() (err error) {
 // Return:
 // Error if present
 func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveAnalysisTemplate, emailInquiryTableName, customerInquiryTableName string) (err error) {
-	//TODO: ensure the input to the function for srv is the pool type to reduce load on the system.
-	fmt.Println("In the Address Push Notification Function")
 	messages, err := g.GetUnreadMessagesData(srv, user)
 	if err != nil {
 		fmt.Printf("Retrive error for unread Messages: %v\n", err)
 		return err
 	}
-
-	fmt.Println("Size of the message array", len(messages.Messages))
-	fmt.Println("Gotten the unRead MEssages", messages.Messages[0].Id)
 
 	// implement concourrency tools here
 	// Make a different thread read the different unread messages
@@ -302,10 +297,8 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 	// fill the table as needed
 
 	for _, message := range messages.Messages {
-		fmt.Println("In the for loop for decoding the unread messages")
 		// need to make a function (concurrent) that runs through the unread emails to do all of the needed tasks
 		emailInfo, _, err := g.GetMessage(srv, message, user)
-		fmt.Println("Email Body:", emailInfo.Body)
 		if err != nil {
 			fmt.Printf("Specific Message retrive error: %v\n", err)
 			return err
@@ -319,7 +312,6 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 		}
 
 		sup_thread_id := message.ThreadId
-		fmt.Println("Supplier Thread:", sup_thread_id)
 
 		if presentInfo.Present {
 			id_opt := d.IDOption{
