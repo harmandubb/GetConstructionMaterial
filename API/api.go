@@ -336,11 +336,15 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 				emailInquiry.Data_Sheet = &placeholder
 			}
 
+			fmt.Println("Updating the email inquiry entery")
+
 			err = d.UpdateEmailInquiryEntryMaterialPresent(p, emailInquiry.Inquiry_ID, emailInquiryTableName, emailInquiry.Price, emailInquiry.Currency, emailInquiry.Data_Sheet)
 			if err != nil {
 				fmt.Printf("Error updating the material table: %v\n", err)
 				return err
 			}
+
+			fmt.Println("Reading customer inquiry entery")
 
 			// If present then the data in the main customer inquiry should be compared and changed if this inquiry is better
 			// Read the customer inquiry row into
@@ -349,6 +353,8 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 				fmt.Printf("Error reading Customer inquiry table: %v\n", err)
 				return err
 			}
+
+			fmt.Println("Comparing the incoming inquiry to what is present")
 
 			// TODO: Implement a currency compare mechanism generally.
 			result, err := incomingInquiryBetter(custInquiry, emailInquiry)
@@ -359,12 +365,15 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 
 			var currency string
 
+			fmt.Println("Checking what needs to be updated")
+
 			if result {
 				if emailInquiry.Currency != "" {
 					currency = emailInquiry.Currency
 				} else {
 					currency = custInquiry.Currency
 				}
+
 				// More competative item has come in therefor update the customer inquiry table
 				err = d.UpdateCustomerInquiryMaterial(p, customerInquiryTableName, emailInquiry.Inquiry_ID, sup_thread_id, emailInquiry.Price, currency, emailInquiry.Data_Sheet)
 				if err != nil {
@@ -380,6 +389,8 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			fmt.Printf("Error marking email as read: %v\n", err)
 			return err
 		}
+
+		fmt.Println("Marked the email as read and working ")
 	}
 
 	return nil
