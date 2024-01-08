@@ -80,8 +80,12 @@ func ReadEmailInquiryEntry(p *pgxpool.Pool, tableName string, id_opt IDOption) (
 	} else {
 		sqlString = fmt.Sprintf("SELECT * FROM %s WHERE thread_id = '%s'", tableName, id_opt.Thread_ID)
 	}
+	fmt.Println("SQLSTRING:", sqlString)
+
 	rows, err := dataBaseRead(p, sqlString)
 	if err != nil {
+		fmt.Println("Error reading database:")
+		fmt.Println(err)
 		return EmailInquiries{}, err
 	}
 
