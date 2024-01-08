@@ -321,7 +321,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 			// find the threadID and use it to pull out the row of information in the inquiry table
 			emailInquiry, err := d.ReadEmailInquiryEntry(p, emailInquiryTableName, id_opt)
 			if err != nil {
-				fmt.Printf("Error Reading database email inquiry entry: -->")
+				fmt.Printf("Error Reading database email inquiry entry: -->\n")
 				fmt.Println(err)
 				return err
 			}
