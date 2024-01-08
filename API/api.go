@@ -306,6 +306,7 @@ func AddressPushNotification(p *pgxpool.Pool, srv *gmail.Service, user, receiveA
 
 		// Need to analize the the email body in chat gpt to see what I should do next
 		presentInfo, err := gpt.PromptGPTReceiveEmailAnalysis(receiveAnalysisTemplate, emailInfo.Body)
+		fmt.Println("Present Info:", presentInfo)
 		if err != nil {
 			fmt.Printf("Incoming Message Analysis error: %v\n", err)
 			return err
