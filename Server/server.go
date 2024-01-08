@@ -64,8 +64,8 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 		"https://localhost":                                                       true,
 	}
 
-	fmt.Println("Origin Request:", origin)
-	fmt.Println("Server present:", allowedOrigins[origin])
+	// fmt.Println("Origin Request:", origin)
+	// fmt.Println("Server present:", allowedOrigins[origin])
 
 	_, ok := allowedOrigins[origin]
 
@@ -302,8 +302,6 @@ func Idle() {
 		srv := gmailServicePool.Get().(*gmail.Service)
 		defer gmailServicePool.Put(srv)
 
-		fmt.Println("Server credentials", srv)
-
 		c := mapsServicePool.Get().(*maps.Client)
 		defer mapsServicePool.Put(c)
 
@@ -311,8 +309,6 @@ func Idle() {
 		defer dataBaseConnectionPool.Put(p)
 
 		user := os.Getenv("USER_EMAIL")
-
-		fmt.Println("User email is:", user)
 
 		go api.AddressPushNotification(
 			p,
