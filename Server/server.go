@@ -321,8 +321,6 @@ func Idle() {
 
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Println("Returning a positive response to the sender")
-
 		// Send a response body
 		w.Write([]byte("OK"))
 
