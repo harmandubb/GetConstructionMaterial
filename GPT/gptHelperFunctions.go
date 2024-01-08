@@ -291,6 +291,7 @@ func parseGPTAnalysisMaterialResponse(gptResponse string) (EmailPresentInfo, err
 			f, err := strconv.ParseFloat(trimmedPriceString, 64)
 			if err != nil {
 				fmt.Println("Unable to convert the price")
+				f = 0
 				continue
 			}
 
