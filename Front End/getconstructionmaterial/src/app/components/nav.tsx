@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 function NavBar() {
   return (
-    <nav className="flex items-center bg-brand">
+    <nav className="flex items-center bg-brand dark:text-black">
       <Image 
         src = "/Logo/logo.png"
         width = {100}
